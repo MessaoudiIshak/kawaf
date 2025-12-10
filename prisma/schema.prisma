@@ -1,0 +1,71 @@
+// prisma/schema.prisma
+// Ensure the provider is set to "postgresql"
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// This generates the client library for TypeScript
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+// 1. User Model (for Admin Login)
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String   // HASHED password must be stored here
+  role      Role     @default(ADMIN) // Role-based security check
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// 2. Menu Item Model (Core Website Content)
+model MenuItem {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String?
+  price       Decimal  @db.Decimal(6, 2)
+  photoUrl    String?
+  popularity  Int      @default(0)
+  isAvailable Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// 3. Animal Model (Adoption/Gallery Page)
+enum Sex {
+  MALE
+  FEMALE
+}
+
+model Animal {
+  id          Int      @id @default(autoincrement())
+  name        String
+  photoUrl    String?
+  age         Int?
+  weight      Float?
+  sex         Sex?
+  temperament String?
+  story       String?
+  isAdopted   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// 4. Event Model
+model Event {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  date        DateTime
+  photoUrl    String?
+  location    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
