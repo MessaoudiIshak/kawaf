@@ -1,36 +1,201 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Kawaf - Animal Adoption & Restaurant Management Platform
 
-## Getting Started
+This is a [Next.js](https://nextjs.org) full-stack application bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app). It combines restaurant menu management with an animal adoption platform.
 
-First, run the development server:
+## 📋 Project Overview
 
+Kawaf is a comprehensive web application that manages:
+- **Restaurant Menu** - Display and manage menu items with pricing and availability
+- **Animal Adoption** - Showcase animals available for adoption with detailed profiles
+- **Events** - Create and manage community events
+- **Admin Panel** - Secure admin authentication and management features
+
+## 🏗️ Architecture
+
+### Tech Stack
+- **Frontend**: Next.js 16 with React 19 and TypeScript
+- **Backend**: Next.js API Routes (serverless functions)
+- **Database**: PostgreSQL with Prisma ORM
+- **Authentication**: JWT (JSON Web Tokens) with bcrypt password hashing
+- **Styling**: Tailwind CSS
+- **Linting**: ESLint
+
+### Project Structure
+```
+kawaf/
+├── src/
+│   └── app/
+│       ├── api/                 # API endpoints
+│       │   ├── animals/         # Animal CRUD endpoints
+│       │   ├── events/          # Event management endpoints
+│       │   └── user/            # User authentication endpoints
+│       ├── globals.css          # Global styles
+│       ├── layout.tsx           # Root layout component
+│       └── page.tsx             # Home page
+├── prisma/
+│   ├── schema.prisma            # Database schema definition
+│   └── migrations/              # Database migrations
+├── public/                      # Static assets
+├── package.json                 # Project dependencies
+├── next.config.ts               # Next.js configuration
+├── tsconfig.json                # TypeScript configuration
+└── .env                         # Environment variables (local)
+```
+
+### Database Schema
+
+The application uses 4 main models:
+
+1. **User** - Admin user accounts with role-based access (ADMIN/USER)
+2. **MenuItem** - Restaurant menu items with pricing and availability
+3. **Animal** - Animals available for adoption with details and adoption status
+4. **Event** - Community events with date, location, and description
+
+For detailed schema documentation, see [SCHEMA_DOCUMENTATION.md](./SCHEMA_DOCUMENTATION.md)
+
+## 🚀 Getting Started Locally
+
+### Prerequisites
+- **Node.js** 18+ and npm/yarn
+- **PostgreSQL** 12+ (running locally or via Docker)
+- **Git** for version control
+
+### Step 1: Clone and Install Dependencies
+```bash
+# Clone the repository
+git clone https://github.com/MessaoudiIshak/kawaf.git
+cd kawaf
+
+# Install dependencies
+npm install
+# or
+yarn install
+# or
+pnpm install
+```
+
+### Step 2: Setup Database
+
+#### Option A: Local PostgreSQL
+Ensure PostgreSQL is running on your machine, then create a database:
+```bash
+createdb kawaf
+```
+
+#### Option B: Docker (Recommended)
+```bash
+docker run --name kawaf-db -e POSTGRES_PASSWORD=admin -e POSTGRES_DB=kawaf -p 5432:5432 -d postgres:latest
+```
+
+### Step 3: Configure Environment Variables
+Create a `.env` file in the root directory (copy from `.env.example`):
+```bash
+DATABASE_URL="postgresql://admin:admin@localhost:5432/kawaf?schema=public"
+```
+
+**Note**: Update the connection string with your PostgreSQL credentials if different.
+
+### Step 4: Setup Database Schema
+Run Prisma migrations to create tables and structure:
+```bash
+npx prisma migrate dev
+```
+
+This will:
+- Create all tables in PostgreSQL
+- Generate Prisma Client for database access
+
+### Step 5: (Optional) Seed Database
+If a seed script exists, populate initial data:
+```bash
+npm run seed
+```
+
+### Step 6: Start Development Server
 ```bash
 npm run dev
 # or
 yarn dev
 # or
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📝 Available Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run dev      # Start development server (with auto-reload)
+npm run build    # Build for production
+npm start        # Run production build
+npm run lint     # Run ESLint code validation
+npm run seed     # Seed database with initial data
+```
 
-## Learn More
+## 🗄️ Database Management
 
-To learn more about Next.js, take a look at the following resources:
+### View Database in Prisma Studio (GUI)
+```bash
+npx prisma studio
+```
+This opens a web interface to view and edit your database at [http://localhost:5555](http://localhost:5555)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Generate Prisma Client
+After schema changes:
+```bash
+npx prisma generate
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Reset Database (Warning: Deletes all data)
+```bash
+npx prisma migrate reset
+```
 
-## Deploy on Vercel
+## 📚 API Endpoints
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Animals
+- `GET /api/animals` - Fetch all animals
+- `GET /api/animals/:id` - Get animal by ID
+- `POST /api/animals` - Create new animal (admin)
+- `PUT /api/animals/:id` - Update animal (admin)
+- `DELETE /api/animals/:id` - Delete animal (admin)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Events
+- `GET /api/events` - Fetch all events
+- `GET /api/events/:id` - Get event by ID
+- `POST /api/events` - Create new event (admin)
+- `PUT /api/events/:id` - Update event (admin)
+- `DELETE /api/events/:id` - Delete event (admin)
+
+### Users
+- `POST /api/user/login` - User authentication
+- `POST /api/user/register` - Register new admin user
+
+## 🔧 Development Tips
+
+- **Auto-reload**: The dev server auto-reloads when you save files
+- **Hot Module Replacement**: React components update without full refresh
+- **TypeScript**: Full type safety for better development experience
+- **ESLint**: Code validation (run `npm run lint` to check)
+
+## 📖 Learn More
+
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Prisma Documentation](https://www.prisma.io/docs)
+- [PostgreSQL Documentation](https://www.postgresql.org/docs)
+- [Tailwind CSS](https://tailwindcss.com/docs)
+
+## 🚢 Deployment
+
+This project is optimized for deployment on [Vercel](https://vercel.com):
+
+1. Push code to GitHub
+2. Connect repository to Vercel
+3. Set environment variables (`DATABASE_URL`)
+4. Deploy with one click
+
+For other platforms, build the app:
+```bash
+npm run build
+npm start
+```
