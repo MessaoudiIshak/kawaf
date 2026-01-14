@@ -13,14 +13,16 @@ generator client {
 enum Role {
   ADMIN
   USER
+  STAFF
 }
 
 // 1. User Model (for Admin Login)
 model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
+  name      String
   password  String   // HASHED password must be stored here
-  role      Role     @default(ADMIN) // Role-based security check
+  role      Role     @default(USER) // Role-based security check
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
