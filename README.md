@@ -28,10 +28,16 @@ kawaf/
 │       ├── api/                 # API endpoints
 │       │   ├── animals/         # Animal CRUD endpoints
 │       │   ├── events/          # Event management endpoints
+│       │   ├── menu/            # Menu item CRUD endpoints
 │       │   └── user/            # User authentication endpoints
 │       ├── globals.css          # Global styles
 │       ├── layout.tsx           # Root layout component
 │       └── page.tsx             # Home page
+│   ├── lib/
+│   │   ├── auth-guard.ts        # JWT authentication helper
+│   │   └── prisma.ts            # Prisma client singleton
+│   └── types/
+│       └── types.ts             # Shared TypeScript interfaces
 ├── prisma/
 │   ├── schema.prisma            # Database schema definition
 │   └── migrations/              # Database migrations
@@ -153,23 +159,48 @@ npx prisma migrate reset
 
 ## 📚 API Endpoints
 
+All endpoints use JWT-based authorization via the `Authorization: Bearer <token>` header.
+
+### Role-Based Access Control
+
+| Role | Description |
+|------|-------------|
+| `ADMIN` | Full access to all resources |
+| `STAFF` | Full access to all resources |
+| `USER` | Can create/update/delete, but sees filtered GET results |
+| `none` | Public/unauthenticated - read-only with filters |
+
 ### Animals
-- `GET /api/animals` - Fetch all animals
-- `GET /api/animals/:id` - Get animal by ID
-- `POST /api/animals` - Create new animal (admin)
-- `PUT /api/animals/:id` - Update animal (admin)
-- `DELETE /api/animals/:id` - Delete animal (admin)
+| Method | Endpoint | Access | Notes |
+|--------|----------|--------|-------|
+| `GET` | `/api/animals` | Public | ADMIN/STAFF see all; others see only `isAdopted: false` |
+| `GET` | `/api/animals/:id` | Public | Everyone can view a single animal |
+| `POST` | `/api/animals` | Authenticated | Requires USER, STAFF, or ADMIN role |
+| `PUT` | `/api/animals/:id` | Authenticated | Requires USER, STAFF, or ADMIN role |
+| `DELETE` | `/api/animals/:id` | Authenticated | Requires USER, STAFF, or ADMIN role |
+
+### Menu
+| Method | Endpoint | Access | Notes |
+|--------|----------|--------|-------|
+| `GET` | `/api/menu` | Public | ADMIN/STAFF see all; others see only `isAvailable: true` |
+| `GET` | `/api/menu/:id` | Public | Everyone can view a single item |
+| `POST` | `/api/menu` | Authenticated | Requires USER, STAFF, or ADMIN role |
+| `PUT` | `/api/menu/:id` | Authenticated | Requires USER, STAFF, or ADMIN role |
+| `DELETE` | `/api/menu/:id` | Authenticated | Requires USER, STAFF, or ADMIN role |
 
 ### Events
-- `GET /api/events` - Fetch all events
-- `GET /api/events/:id` - Get event by ID
-- `POST /api/events` - Create new event (admin)
-- `PUT /api/events/:id` - Update event (admin)
-- `DELETE /api/events/:id` - Delete event (admin)
+| Method | Endpoint | Access | Notes |
+|--------|----------|--------|-------|
+| `GET` | `/api/events` | Public | ADMIN/STAFF see all; others see events from last 7 days onwards |
+| `GET` | `/api/events/:id` | Public | Everyone can view a single event |
+| `POST` | `/api/events` | Authenticated | Requires USER, STAFF, or ADMIN role |
+| `PUT` | `/api/events/:id` | Authenticated | Requires USER, STAFF, or ADMIN role |
+| `DELETE` | `/api/events/:id` | Authenticated | Requires USER, STAFF, or ADMIN role |
 
 ### Users
-- `POST /api/user/login` - User authentication
-- `POST /api/user/register` - Register new admin user
+| Method | Endpoint | Access | Notes |
+|--------|----------|--------|-------|
+| `POST` | `/api/user/login` | Public | Returns JWT token on success |
 
 ## 🔧 Development Tips
 

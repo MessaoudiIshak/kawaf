@@ -28,19 +28,26 @@ kawaf/
 │   │   ├── page.tsx           # Home page (default Next.js template)
 │   │   └── api/
 │   │       ├── animals/
-│   │       │   ├── route.ts   # 🔴 EMPTY - needs implementation
-│   │       │   └── [id]/      # Dynamic route (empty)
-│   │       ├── events/
-│   │       │   ├── route.ts   # 🔴 EMPTY - needs implementation
+│   │       │   ├── route.ts   # ✅ GET (all), POST
 │   │       │   └── [id]/
-│   │       │       └── route.ts # 🔴 EMPTY - needs implementation
+│   │       │       └── route.ts # ✅ GET, PUT, DELETE
+│   │       ├── menu/
+│   │       │   ├── route.ts   # ✅ GET (all), POST
+│   │       │   └── [id]/
+│   │       │       └── route.ts # ✅ GET, PUT, DELETE
+│   │       ├── events/
+│   │       │   ├── route.ts   # ✅ GET (all), POST
+│   │       │   └── [id]/
+│   │       │       └── route.ts # ✅ GET, PUT, DELETE
 │   │       └── user/
-│   │           ├── addAccount/
-│   │           │   └── route.ts # 🔴 EMPTY - needs implementation
+│   │           ├── route.ts   # (empty placeholder)
 │   │           └── login/
-│   │               └── route.ts # 🔴 EMPTY - needs implementation
-│   └── lib/
-│       └── prisma.ts          # ✅ Prisma client singleton
+│   │               └── route.ts # ✅ POST (JWT login)
+│   ├── lib/
+│   │   ├── auth-guard.ts      # ✅ JWT verification helper (getAuthStatus)
+│   │   └── prisma.ts          # ✅ Prisma client singleton
+│   └── types/
+│       └── types.ts           # ✅ Shared TypeScript interfaces
 ├── package.json
 ├── tsconfig.json
 ├── next.config.ts
@@ -193,7 +200,53 @@ if (process.env.NODE_ENV !== 'production') {
 export default prisma;
 ```
 
-### 2. Admin Seeding Script (prisma/seed.ts)
+### 2. Auth Guard Helper (src/lib/auth-guard.ts)
+
+```typescript
+import { NextRequest } from 'next/server';
+import jwt from 'jsonwebtoken';
+import { Role } from '@prisma/client';
+
+export interface DecodedToken {
+  role: Role;
+  email: string;
+  iat: number;
+  exp: number;
+}
+
+export interface AuthStatus {
+  isAuth: boolean;
+  role: Role | 'none';
+}
+
+export async function getAuthStatus(request: NextRequest): Promise<AuthStatus> {
+  const authHeader = request.headers.get('authorization');
+  const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret';
+
+  const noneState: AuthStatus = {
+    isAuth: false,
+    role: 'none',
+  };
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return noneState;
+  }
+
+  const token = authHeader.split(' ')[1];
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as DecodedToken;
+    return {
+      isAuth: true,
+      role: decoded.role,
+    };
+  } catch (error) {
+    return noneState;
+  }
+}
+```
+
+### 3. Admin Seeding Script (prisma/seed.ts)
 
 ```typescript
 import { PrismaClient, Role } from '@prisma/client';
@@ -235,7 +288,15 @@ main()
   });
 ```
 
-### 3. Root Layout (src/app/layout.tsx)
+### 4. Types (src/types/types.ts)
+
+```typescript
+export type Context = {
+  params: Promise<{ id: string }>;
+};
+```
+
+### 5. Root Layout (src/app/layout.tsx)
 
 ```tsx
 import type { Metadata } from "next";
@@ -274,7 +335,7 @@ export default function RootLayout({
 }
 ```
 
-### 4. Global CSS (src/app/globals.css)
+### 6. Global CSS (src/app/globals.css)
 
 ```css
 @import "tailwindcss";
@@ -305,7 +366,7 @@ body {
 }
 ```
 
-### 5. Home Page (src/app/page.tsx) - Default Next.js Template
+### 7. Home Page (src/app/page.tsx) - Default Next.js Template
 
 ```tsx
 import Image from "next/image";
@@ -331,18 +392,48 @@ export default function Home() {
 
 ---
 
-## 🔴 APIs TO IMPLEMENT (All Currently Empty)
+## 🔴 APIs TO IMPLEMENT (Remaining)
 
 | Endpoint | File | HTTP Methods | Purpose |
 |----------|------|--------------|---------|
-| `/api/user/addAccount` | `src/app/api/user/addAccount/route.ts` | POST | Create new admin user |
-| `/api/user/login` | `src/app/api/user/login/route.ts` | POST | Admin login with JWT |
-| `/api/animals` | `src/app/api/animals/route.ts` | GET, POST | List all / Create animal |
-| `/api/animals/[id]` | `src/app/api/animals/[id]/route.ts` | GET, PUT, DELETE | CRUD single animal |
-| `/api/events` | `src/app/api/events/route.ts` | GET, POST | List all / Create event |
-| `/api/events/[id]` | `src/app/api/events/[id]/route.ts` | GET, PUT, DELETE | CRUD single event |
+| `/api/user` | `src/app/api/user/route.ts` | POST | Create new user (optional) |
 
-**Note:** Menu Items API folder structure doesn't exist yet - needs to be created.
+---
+
+## ✅ IMPLEMENTED APIs
+
+All API routes use JWT-based authorization via `getAuthStatus()` from `@/lib/auth-guard`.
+
+### Role-Based Access Control
+
+| Role | GET (list) | GET (single) | POST/PUT/DELETE |
+|------|------------|--------------|-----------------|
+| `ADMIN` | All records | ✅ Allowed | ✅ Allowed |
+| `STAFF` | All records | ✅ Allowed | ✅ Allowed |
+| `USER` | Filtered | ✅ Allowed | ✅ Allowed |
+| `none` (public) | Filtered | ✅ Allowed | ❌ 401 Unauthorized |
+
+### Filter Rules for GET (list)
+
+| Resource | ADMIN/STAFF | USER/Public |
+|----------|-------------|-------------|
+| Animals | All animals | `{ isAdopted: false }` |
+| Menu | All items | `{ isAvailable: true }` |
+| Events | All events | `{ date: { gte: 7 days ago } }` |
+
+### Implemented Endpoints
+
+| Endpoint | Methods | Status |
+|----------|---------|--------|
+| `/api/animals` | GET, POST | ✅ Complete |
+| `/api/animals/[id]` | GET, PUT, DELETE | ✅ Complete |
+| `/api/menu` | GET, POST | ✅ Complete |
+| `/api/menu/[id]` | GET, PUT, DELETE | ✅ Complete |
+| `/api/events` | GET, POST | ✅ Complete |
+| `/api/events/[id]` | GET, PUT, DELETE | ✅ Complete |
+| `/api/user/login` | POST | ✅ Complete |
+
+**Note:** Menu Items now use `Prisma.Decimal` for price fields to ensure precision.
 
 ---
 
@@ -369,13 +460,8 @@ JWT_SECRET="your-jwt-secret-for-authentication"
 
 ## 📝 What Needs To Be Built
 
-### Backend (Priority Order):
-1. **User Login API** (`/api/user/login`) - POST endpoint with bcrypt password verification + JWT generation
-2. **User AddAccount API** (`/api/user/addAccount`) - POST endpoint to create new admin users (protected)
-3. **Animals CRUD API** - Full CRUD for animal adoption profiles
-4. **Events CRUD API** - Full CRUD for café events
-5. **Menu Items CRUD API** - Full CRUD for menu items (folder needs creation)
-6. **Auth Middleware** - Protect admin routes with JWT verification
+### Backend (Remaining):
+1. **User Registration API** (`/api/user`) - Optional POST endpoint to create new users (protected)
 
 ### Frontend Pages:
 1. **Home Page** - Landing page with café info (replace default template)
@@ -458,4 +544,4 @@ npm run build
 
 ---
 
-**Please help me build this website step by step, starting with the backend API implementations.**
+**Backend API implementation is complete. Next step: build the frontend pages.**
