@@ -1,231 +1,231 @@
-# 🎨 Kawaf - Design Handoff Document
+# 🎨 Kawaf - Document de Transmission Design
 
-> **Last Updated:** January 15, 2026  
-> **Project:** Kawaf Cat Café Website  
-> **Status:** Backend Complete, Frontend Development Pending
-
----
-
-## 📋 Project Summary
-
-Kawaf is a website for a cat café that combines:
-- A **café menu** showcasing food and drinks
-- An **animal adoption gallery** featuring cats looking for homes
-- An **events calendar** for community activities
-- A **secure admin panel** for staff to manage all content
+> **Dernière mise à jour :** 15 janvier 2026  
+> **Projet :** Site web Kawaf Cat Café  
+> **Statut :** Backend terminé, Développement Frontend en attente
 
 ---
 
-## ✅ What's Already Built (Backend)
+## 📋 Résumé du Projet
 
-The entire backend system is complete and ready to power the website. Here's what it can do:
-
-### 🐱 Animals / Adoption Gallery
-- Display all cats available for adoption
-- Show detailed profiles: name, photo, age, weight, personality, and their story
-- Mark cats as adopted (they disappear from public view)
-- Add, edit, or remove animal profiles
-
-### 🍽️ Café Menu
-- Display all menu items with prices and descriptions
-- Show item photos and popularity ratings
-- Mark items as available or unavailable (unavailable items hidden from customers)
-- Add, edit, or remove menu items
-
-### 📅 Events
-- Display upcoming and recent events
-- Show event details: title, description, date, location, and photo
-- Events older than 7 days automatically hide from public view
-- Add, edit, or remove events
-
-### 👤 User Management
-- Secure login system for staff
-- Create new staff accounts (Admin only)
-- View all registered users (Admin only)
+Kawaf est un site web pour un bar à chats qui combine :
+- Un **menu du café** présentant les boissons et plats
+- Une **galerie d'adoption** mettant en avant les chats à adopter
+- Un **calendrier d'événements** pour les activités communautaires
+- Un **panneau d'administration sécurisé** pour que le personnel gère tout le contenu
 
 ---
 
-## � Features In Development
+## ✅ Ce qui est déjà construit (Backend)
 
-These features are planned and will be built soon:
+L'ensemble du système backend est terminé et prêt à alimenter le site. Voici ce qu'il peut faire :
 
-### 📝 Adoption Request Form
-- Visitors can submit an adoption inquiry directly from a cat's profile
-- Form fields: name, email, phone, message, preferred contact method
-- Submission sends notification to café staff
-- Confirmation email sent to the visitor
+### 🐱 Animaux / Galerie d'Adoption
+- Afficher tous les chats disponibles à l'adoption
+- Montrer les profils détaillés : nom, photo, âge, poids, personnalité et leur histoire
+- Marquer les chats comme adoptés (ils disparaissent de la vue publique)
+- Ajouter, modifier ou supprimer des profils d'animaux
 
-### 📬 Contact Form
-- General inquiries, reservations, event questions
-- Form fields: name, email, subject, message
-- Auto-reply confirmation to sender
-- Staff receives notification email
+### 🍽️ Menu du Café
+- Afficher tous les articles du menu avec prix et descriptions
+- Montrer les photos et les notes de popularité des articles
+- Marquer les articles comme disponibles ou indisponibles (les articles indisponibles sont cachés aux clients)
+- Ajouter, modifier ou supprimer des articles du menu
 
-### 📱 QR Code Swipe System ("Cat Tinder")
-- Interactive experience for visitors at the café
-- Scan a QR code to open the swipe interface on your phone
-- Swipe through cat profiles (like/pass)
-- See your "liked" cats at the end
-- Share results with staff to discuss adoption
-- Fun, engaging way to discover your perfect match!
+### 📅 Événements
+- Afficher les événements à venir et récents
+- Montrer les détails : titre, description, date, lieu et photo
+- Les événements de plus de 7 jours sont automatiquement cachés du public
+- Ajouter, modifier ou supprimer des événements
 
-### 📧 Email Services
-Automated emails for:
-| Email Type | Trigger | Recipient |
-|------------|---------|----------|
-| Adoption Inquiry | Form submitted | Staff + Visitor (confirmation) |
-| Contact Message | Form submitted | Staff + Visitor (confirmation) |
-| Account Verification | New user created | New user |
-| Password Reset | Reset requested | User |
-| Adoption Status Update | Cat marked adopted | Previous inquirers (optional) |
+### 👤 Gestion des Utilisateurs
+- Système de connexion sécurisé pour le personnel
+- Créer de nouveaux comptes (Admin uniquement)
+- Voir tous les utilisateurs enregistrés (Admin uniquement)
 
 ---
 
-## �🔐 Roles & Access Control
+## 🚧 Fonctionnalités en Développement
 
-The system has **four access levels**. This determines what each person can see and do:
+Ces fonctionnalités sont prévues et seront construites prochainement :
 
-| Role | Who is this? | What can they see? | What can they do? |
-|------|--------------|--------------------|--------------------|
-| **Public** | Anyone visiting the website | Only available items, non-adopted cats, recent events | Browse only (no editing) |
-| **User** | Registered basic users | Same as public | Can add/edit/delete content |
-| **Staff** | Café employees | **Everything** (including hidden items) | Can add/edit/delete content |
-| **Admin** | Managers/Owners | **Everything** | Full control + can create new accounts |
+### 📝 Formulaire de Demande d'Adoption
+- Les visiteurs peuvent soumettre une demande d'adoption directement depuis le profil d'un chat
+- Champs du formulaire : nom, email, téléphone, message, méthode de contact préférée
+- La soumission envoie une notification au personnel du café
+- Email de confirmation envoyé au visiteur
 
-### What "Hidden" Content Means:
-- **Animals:** Cats marked as "adopted" are hidden from customers but visible to Staff/Admin
-- **Menu:** Items marked as "unavailable" are hidden from customers but visible to Staff/Admin  
-- **Events:** Events older than 7 days are hidden from customers but visible to Staff/Admin
+### 📬 Formulaire de Contact
+- Demandes générales, réservations, questions sur les événements
+- Champs du formulaire : nom, email, sujet, message
+- Réponse automatique de confirmation à l'expéditeur
+- Le personnel reçoit un email de notification
+
+### 📱 Système de Swipe QR Code ("Cat Tinder")
+- Expérience interactive pour les visiteurs au café
+- Scanner un QR code pour ouvrir l'interface de swipe sur son téléphone
+- Swiper les profils de chats (j'aime/passer)
+- Voir ses chats "aimés" à la fin
+- Partager les résultats avec le personnel pour discuter de l'adoption
+- Une façon amusante et engageante de découvrir son compagnon idéal !
+
+### 📧 Services Email
+Emails automatisés pour :
+| Type d'Email | Déclencheur | Destinataire |
+|--------------|-------------|--------------|
+| Demande d'Adoption | Formulaire soumis | Personnel + Visiteur (confirmation) |
+| Message de Contact | Formulaire soumis | Personnel + Visiteur (confirmation) |
+| Vérification de Compte | Nouvel utilisateur créé | Nouvel utilisateur |
+| Réinitialisation de Mot de Passe | Demande effectuée | Utilisateur |
+| Mise à jour du Statut d'Adoption | Chat marqué comme adopté | Anciens demandeurs (optionnel) |
 
 ---
 
-## 🖥️ Admin Interface Features (To Be Designed)
+## 🔐 Rôles et Contrôle d'Accès
 
-The admin panel needs to support these actions:
+Le système a **quatre niveaux d'accès**. Cela détermine ce que chaque personne peut voir et faire :
 
-### Login Page
-- Email and password fields
-- "Login" button
-- Error messages for wrong credentials
+| Rôle | Qui est-ce ? | Que peuvent-ils voir ? | Que peuvent-ils faire ? |
+|------|--------------|------------------------|-------------------------|
+| **Public** | Toute personne visitant le site | Uniquement les articles disponibles, chats non adoptés, événements récents | Navigation uniquement (pas de modification) |
+| **Utilisateur** | Utilisateurs basiques enregistrés | Comme le public | Peut ajouter/modifier/supprimer du contenu |
+| **Staff** | Employés du café | **Tout** (y compris les éléments cachés) | Peut ajouter/modifier/supprimer du contenu |
+| **Admin** | Gérants/Propriétaires | **Tout** | Contrôle total + peut créer de nouveaux comptes |
 
-### Dashboard (After Login)
-- Overview/welcome screen
-- Navigation to: Animals, Menu, Events, Users (Admin only)
+### Ce que signifie le contenu "Caché" :
+- **Animaux :** Les chats marqués comme "adoptés" sont cachés aux clients mais visibles pour le Staff/Admin
+- **Menu :** Les articles marqués comme "indisponibles" sont cachés aux clients mais visibles pour le Staff/Admin
+- **Événements :** Les événements de plus de 7 jours sont cachés aux clients mais visibles pour le Staff/Admin
 
-### Animals Management
+---
+
+## 🖥️ Fonctionnalités de l'Interface Admin (À Concevoir)
+
+Le panneau d'administration doit supporter ces actions :
+
+### Page de Connexion
+- Champs email et mot de passe
+- Bouton "Connexion"
+- Messages d'erreur pour les mauvais identifiants
+
+### Tableau de Bord (Après Connexion)
+- Écran d'accueil/aperçu
+- Navigation vers : Animaux, Menu, Événements, Utilisateurs (Admin uniquement)
+
+### Gestion des Animaux
 | Action | Description |
 |--------|-------------|
-| View All | Table/grid of all animals (including adopted ones) |
-| Add New | Form: name, photo URL, age, weight, sex, temperament, story |
-| Edit | Same form, pre-filled with existing data |
-| Delete | Confirmation prompt before removing |
-| Toggle Adoption | Button/switch to mark as adopted/available |
+| Voir Tout | Tableau/grille de tous les animaux (y compris les adoptés) |
+| Ajouter | Formulaire : nom, URL photo, âge, poids, sexe, tempérament, histoire |
+| Modifier | Même formulaire, pré-rempli avec les données existantes |
+| Supprimer | Confirmation avant suppression |
+| Basculer Adoption | Bouton/switch pour marquer comme adopté/disponible |
 
-### Menu Management
+### Gestion du Menu
 | Action | Description |
 |--------|-------------|
-| View All | Table/grid of all menu items (including unavailable) |
-| Add New | Form: name, description, price, photo URL, popularity |
-| Edit | Same form, pre-filled with existing data |
-| Delete | Confirmation prompt before removing |
-| Toggle Availability | Button/switch to show/hide from public |
+| Voir Tout | Tableau/grille de tous les articles (y compris indisponibles) |
+| Ajouter | Formulaire : nom, description, prix, URL photo, popularité |
+| Modifier | Même formulaire, pré-rempli avec les données existantes |
+| Supprimer | Confirmation avant suppression |
+| Basculer Disponibilité | Bouton/switch pour afficher/cacher du public |
 
-### Events Management
+### Gestion des Événements
 | Action | Description |
 |--------|-------------|
-| View All | Table/grid of all events (including past ones) |
-| Add New | Form: title, description, date/time, location, photo URL |
-| Edit | Same form, pre-filled with existing data |
-| Delete | Confirmation prompt before removing |
+| Voir Tout | Tableau/grille de tous les événements (y compris passés) |
+| Ajouter | Formulaire : titre, description, date/heure, lieu, URL photo |
+| Modifier | Même formulaire, pré-rempli avec les données existantes |
+| Supprimer | Confirmation avant suppression |
 
-### User Management (Admin Only)
+### Gestion des Utilisateurs (Admin Uniquement)
 | Action | Description |
 |--------|-------------|
-| View All | Table of all users (email, role, created date) |
-| Add New | Form: name, email, password, role selection |
+| Voir Tout | Tableau de tous les utilisateurs (email, rôle, date de création) |
+| Ajouter | Formulaire : nom, email, mot de passe, sélection du rôle |
 
 ---
 
-## 🌐 Public Website Pages (To Be Designed)
+## 🌐 Pages du Site Public (À Concevoir)
 
-### Home Page
-- Hero section with café introduction
-- Featured cats available for adoption
-- Sample menu highlights
-- Upcoming events preview
+### Page d'Accueil
+- Section héro avec présentation du café
+- Chats vedettes disponibles à l'adoption
+- Aperçu des articles du menu
+- Aperçu des événements à venir
 
-### Menu Page
-- Grid/list of all **available** menu items
-- Each item shows: photo, name, description, price
-- Optional: filter by category, sort by popularity
+### Page Menu
+- Grille/liste de tous les articles **disponibles**
+- Chaque article affiche : photo, nom, description, prix
+- Optionnel : filtre par catégorie, tri par popularité
 
-### Adoption Page
-- Gallery of **non-adopted** cats
-- Each cat shows: photo, name, age, brief description
-- Click to see full profile with personality & story
+### Page Adoption
+- Galerie des chats **non adoptés**
+- Chaque chat affiche : photo, nom, âge, brève description
+- Cliquer pour voir le profil complet avec personnalité et histoire
 
-### Events Page
-- List of upcoming and recent events (last 7 days)
-- Each event shows: photo, title, date, location, description
+### Page Événements
+- Liste des événements à venir et récents (7 derniers jours)
+- Chaque événement affiche : photo, titre, date, lieu, description
 
-### Single Animal Page
-- Full profile view for one cat
-- Large photo, all details, adoption inquiry info
+### Page Animal Individuelle
+- Vue profil complète pour un chat
+- Grande photo, tous les détails, infos pour demande d'adoption
 
-### Single Event Page
-- Full details for one event
-- Large photo, complete description, location info
+### Page Événement Individuelle
+- Détails complets pour un événement
+- Grande photo, description complète, infos de localisation
 
-### Adoption Request Page
-- Form to submit adoption inquiry
-- Shows which cat they're inquiring about
-- Fields: name, email, phone, message
-- Success confirmation after submission
+### Page Demande d'Adoption
+- Formulaire pour soumettre une demande d'adoption
+- Affiche quel chat concerne la demande
+- Champs : nom, email, téléphone, message
+- Confirmation de succès après soumission
 
-### Contact Page
-- General contact form
-- Café address, phone, hours
-- Embedded map (optional)
-- Social media links
+### Page Contact
+- Formulaire de contact général
+- Adresse du café, téléphone, horaires
+- Carte intégrée (optionnel)
+- Liens réseaux sociaux
 
-### QR Swipe Experience (Mobile-First)
-- Full-screen cat photo cards
-- Swipe left (pass) / right (like) gestures
-- Tap for more details
-- Results screen showing liked cats
-- Share or save results
-
----
-
-## 📱 Design Considerations
-
-### Responsive Design
-- Mobile-first approach recommended
-- Admin panel can be desktop-focused
-
-### Accessibility
-- Alt text for all images
-- Sufficient color contrast
-- Keyboard navigation support
-
-### Branding Opportunities
-- Cat-themed illustrations
-- Warm, inviting color palette
-- Playful typography for headings
+### Expérience Swipe QR (Mobile-First)
+- Cartes photo de chats en plein écran
+- Gestes swipe gauche (passer) / droite (j'aime)
+- Appuyer pour plus de détails
+- Écran résultats montrant les chats aimés
+- Partager ou sauvegarder les résultats
 
 ---
 
-## 🔜 What's Next
+## 📱 Considérations Design
 
-1. **Frontend Development** - Build the public website pages
-2. **Admin Panel UI** - Create the management interface
-3. **Forms Backend** - Adoption and contact form processing
-4. **Email Integration** - Set up automated email notifications
-5. **QR Swipe System** - Interactive cat matching experience
-6. **Image Upload** - Currently uses URL links; may add file uploads later
+### Design Responsive
+- Approche mobile-first recommandée
+- Le panneau admin peut être orienté desktop
+
+### Accessibilité
+- Texte alternatif pour toutes les images
+- Contraste de couleurs suffisant
+- Support de navigation au clavier
+
+### Opportunités de Branding
+- Illustrations sur le thème des chats
+- Palette de couleurs chaude et accueillante
+- Typographie ludique pour les titres
 
 ---
 
-## 💬 Questions?
+## 🔜 Prochaines Étapes
 
-If you need clarification on any features or access rules, please reach out to the development team.
+1. **Développement Frontend** - Construire les pages du site public
+2. **Interface Admin** - Créer l'interface de gestion
+3. **Backend Formulaires** - Traitement des formulaires d'adoption et contact
+4. **Intégration Email** - Configurer les notifications email automatiques
+5. **Système Swipe QR** - Expérience interactive de matching avec les chats
+6. **Upload d'Images** - Actuellement utilise des liens URL ; ajout possible d'upload de fichiers plus tard
+
+---
+
+## 💬 Questions ?
+
+Si vous avez besoin de clarifications sur les fonctionnalités ou les règles d'accès, contactez l'équipe de développement.
