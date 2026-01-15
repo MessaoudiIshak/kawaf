@@ -1,0 +1,2041 @@
+================================================================================
+                    KAWAF API - POSTMAN TEST COLLECTION
+================================================================================
+Base URL: http://localhost:3000
+
+================================================================================
+                     HOW TO ADD AUTHORIZATION IN POSTMAN
+================================================================================
+
+STEP 1: Run Test #1 (Login) to get a token
+STEP 2: Copy ONLY the token value from the response (without quotes)
+STEP 3: In Postman, go to the "Authorization" tab (not Headers)
+STEP 4: Select Type: "Bearer Token"
+STEP 5: Paste the token in the "Token" field
+
+ALTERNATIVE (Headers tab):
+- Key: Authorization
+- Value: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+  (Note: Include "Bearer " with a space before the token)
+
+IMPORTANT: Tokens expire after 24 hours. Get a fresh token if tests fail!
+
+================================================================================
+                              TABLE OF CONTENTS
+================================================================================
+1. AUTHENTICATION (Login)
+2. USER MANAGEMENT (Admin Only)
+3. ANIMALS - Public Access
+4. ANIMALS - Authenticated Operations
+5. MENU - Public Access
+6. MENU - Authenticated Operations
+7. EVENTS - Public Access
+8. EVENTS - Authenticated Operations
+9. EDGE CASES & ERROR HANDLING
+
+================================================================================
+                         1. AUTHENTICATION (LOGIN)
+================================================================================
+
+--------------------------------------------------------------------------------
+TEST #1: Login - Valid Admin Credentials
+--------------------------------------------------------------------------------
+PURPOSE: Authenticate as admin to get JWT token for subsequent tests
+METHOD: POST
+URL: {{baseUrl}}/api/user/login
+HEADERS:
+  Content-Type: application/json
+BODY:
+{
+  "email": "admin@kawaf.fr",
+  "password": "super_secret_admin_password"
+}
+EXPECTED: 200 OK
+EXPECTED RESPONSE:
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "email": "admin@kawaf.fr",
+    "role": "ADMIN",
+    "name": "Admin Name"
+  }
+}
+
+--------------------------------------------------------------------------------
+TEST #2: Login - Invalid Email
+--------------------------------------------------------------------------------
+PURPOSE: Verify login fails with non-existent email
+METHOD: POST
+URL: {{baseUrl}}/api/user/login
+HEADERS:
+  Content-Type: application/json
+BODY:
+{
+  "email": "nonexistent@kawaf.fr",
+  "password": "anypassword"
+}
+EXPECTED: 401 Unauthorized
+EXPECTED RESPONSE:
+{
+  "error": "Invalid credentials"
+}
+
+--------------------------------------------------------------------------------
+TEST #3: Login - Wrong Password
+--------------------------------------------------------------------------------
+PURPOSE: Verify login fails with incorrect password
+METHOD: POST
+URL: {{baseUrl}}/api/user/login
+HEADERS:
+  Content-Type: application/json
+BODY:
+{
+  "email": "admin@kawaf.fr",
+  "password": "wrongpassword123"
+}
+EXPECTED: 401 Unauthorized
+EXPECTED RESPONSE:
+{
+  "error": "Invalid credentials"
+}
+
+--------------------------------------------------------------------------------
+TEST #4: Login - Missing Email Field
+--------------------------------------------------------------------------------
+PURPOSE: Verify validation when email is missing
+METHOD: POST
+URL: {{baseUrl}}/api/user/login
+HEADERS:
+  Content-Type: application/json
+BODY:
+    {
+    "password": "somepassword"
+    }
+EXPECTED: 400 Bad Request
+EXPECTED RESPONSE:
+{
+  "error": "Email and password are required"
+}
+
+--------------------------------------------------------------------------------
+TEST #5: Login - Missing Password Field
+--------------------------------------------------------------------------------
+PURPOSE: Verify validation when password is missing
+METHOD: POST
+URL: {{baseUrl}}/api/user/login
+HEADERS:
+  Content-Type: application/json
+BODY:
+{
+  "email": "admin@kawaf.fr"
+}
+EXPECTED: 400 Bad Request
+EXPECTED RESPONSE:
+{
+  "error": "Email and password are required"
+}
+
+--------------------------------------------------------------------------------
+TEST #6: Login - Empty Body
+--------------------------------------------------------------------------------
+PURPOSE: Verify handling of empty request body
+METHOD: POST
+URL: {{baseUrl}}/api/user/login
+HEADERS:
+  Content-Type: application/json
+BODY:
+{}
+EXPECTED: 401 Unauthorized
+
+--------------------------------------------------------------------------------
+TEST #7: Login - Invalid JSON Body
+--------------------------------------------------------------------------------
+PURPOSE: Verify handling of malformed JSON
+METHOD: POST
+URL: {{baseUrl}}/api/user/login
+HEADERS:
+  Content-Type: application/json
+BODY (raw text, not JSON):
+{invalid json here
+EXPECTED: 500 Internal Server Error
+
+--------------------------------------------------------------------------------
+TEST #8: Login - SQL Injection Attempt
+--------------------------------------------------------------------------------
+PURPOSE: Verify system is protected against SQL injection
+METHOD: POST
+URL: {{baseUrl}}/api/user/login
+HEADERS:
+  Content-Type: application/json
+BODY:
+{
+  "email": "admin@kawaf.fr' OR '1'='1",
+  "password": "' OR '1'='1"
+}
+EXPECTED: 401 Unauthorized (Prisma sanitizes inputs)
+
+
+================================================================================
+                     2. USER MANAGEMENT (ADMIN ONLY)
+================================================================================
+
+--------------------------------------------------------------------------------
+TEST #9: Get All Users - As Admin
+--------------------------------------------------------------------------------
+PURPOSE: Verify admin can list all users
+METHOD: GET
+URL: {{baseUrl}}/api/user
+HEADERS:
+  Authorization: Bearer <ADD_ADMIN_TOKEN_HERE>
+EXPECTED: 200 OK
+EXPECTED RESPONSE: Array of user objects (without passwords)
+[
+  {
+    "id": 1,
+    "email": "admin@kawaf.fr",
+    "role": "ADMIN",
+    "createdAt": "2026-01-14T...",
+    "updatedAt": "2026-01-14T..."
+  }
+]
+
+--------------------------------------------------------------------------------
+TEST #10: Get All Users - Without Token (Unauthenticated)
+--------------------------------------------------------------------------------
+PURPOSE: Verify unauthenticated users cannot list users
+METHOD: GET
+URL: {{baseUrl}}/api/user
+HEADERS: (none)
+EXPECTED: 403 Forbidden
+EXPECTED RESPONSE:
+{
+  "error": "Forbidden: Admin access only"
+}
+
+--------------------------------------------------------------------------------
+TEST #11: Get All Users - With Invalid Token
+--------------------------------------------------------------------------------
+PURPOSE: Verify invalid tokens are rejected
+METHOD: GET
+URL: {{baseUrl}}/api/user
+HEADERS:
+  Authorization: Bearer invalid.token.here
+EXPECTED: 403 Forbidden
+
+--------------------------------------------------------------------------------
+TEST #12: Get All Users - With Expired Token
+--------------------------------------------------------------------------------
+PURPOSE: Verify expired tokens are rejected
+METHOD: GET
+URL: {{baseUrl}}/api/user
+HEADERS:
+  Authorization: Bearer <ADD_EXPIRED_TOKEN_HERE>
+EXPECTED: 403 Forbidden
+
+--------------------------------------------------------------------------------
+TEST #13: Get All Users - As Staff (Not Admin)
+--------------------------------------------------------------------------------
+PURPOSE: Verify STAFF role cannot access user list (admin only)
+METHOD: GET
+URL: {{baseUrl}}/api/user
+HEADERS:
+  Authorization: Bearer <ADD_STAFF_TOKEN_HERE>
+EXPECTED: 403 Forbidden
+
+--------------------------------------------------------------------------------
+TEST #14: Get All Users - As Regular User
+--------------------------------------------------------------------------------
+PURPOSE: Verify USER role cannot access user list
+METHOD: GET
+URL: {{baseUrl}}/api/user
+HEADERS:
+  Authorization: Bearer <ADD_USER_TOKEN_HERE>
+EXPECTED: 403 Forbidden
+
+--------------------------------------------------------------------------------
+TEST #15: Create User - Valid Data (As Admin)
+--------------------------------------------------------------------------------
+PURPOSE: Verify admin can create new users
+METHOD: POST
+URL: {{baseUrl}}/api/user
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_ADMIN_TOKEN_HERE>
+BODY:
+{
+  "name": "New Staff Member",
+  "email": "newstaff@kawaf.fr",
+  "password": "SecurePassword123!",
+  "role": "STAFF"
+}
+EXPECTED: 201 Created
+EXPECTED RESPONSE:
+{
+  "id": 2,
+  "email": "newstaff@kawaf.fr",
+  "role": "STAFF",
+  "name": "New Staff Member"
+}
+
+--------------------------------------------------------------------------------
+TEST #16: Create User - Default Role (USER)
+--------------------------------------------------------------------------------
+PURPOSE: Verify role defaults to USER when not specified
+METHOD: POST
+URL: {{baseUrl}}/api/user
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_ADMIN_TOKEN_HERE>
+BODY:
+{
+  "name": "Regular User",
+  "email": "regular@kawaf.fr",
+  "password": "Password123!"
+}
+EXPECTED: 201 Created
+EXPECTED RESPONSE: (role should be "USER")
+
+--------------------------------------------------------------------------------
+TEST #17: Create User - Duplicate Email
+--------------------------------------------------------------------------------
+PURPOSE: Verify duplicate emails are rejected
+METHOD: POST
+URL: {{baseUrl}}/api/user
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_ADMIN_TOKEN_HERE>
+BODY:
+{
+  "name": "Duplicate Test",
+  "email": "admin@kawaf.fr",
+  "password": "Password123!"
+}
+EXPECTED: 400 Bad Request
+EXPECTED RESPONSE:
+{
+  "error": "Email already in use"
+}
+
+--------------------------------------------------------------------------------
+TEST #18: Create User - Missing Name
+--------------------------------------------------------------------------------
+PURPOSE: Verify name field is required
+METHOD: POST
+URL: {{baseUrl}}/api/user
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_ADMIN_TOKEN_HERE>
+BODY:
+{
+  "email": "noname@kawaf.fr",
+  "password": "Password123!"
+}
+EXPECTED: 400 Bad Request
+EXPECTED RESPONSE:
+{
+  "error": "Email, password, and name are required"
+}
+
+--------------------------------------------------------------------------------
+TEST #19: Create User - Missing Email
+--------------------------------------------------------------------------------
+PURPOSE: Verify email field is required
+METHOD: POST
+URL: {{baseUrl}}/api/user
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_ADMIN_TOKEN_HERE>
+BODY:
+{
+  "name": "No Email User",
+  "password": "Password123!"
+}
+EXPECTED: 400 Bad Request
+
+--------------------------------------------------------------------------------
+TEST #20: Create User - Missing Password
+--------------------------------------------------------------------------------
+PURPOSE: Verify password field is required
+METHOD: POST
+URL: {{baseUrl}}/api/user
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_ADMIN_TOKEN_HERE>
+BODY:
+{
+  "name": "No Password User",
+  "email": "nopass@kawaf.fr"
+}
+EXPECTED: 400 Bad Request
+
+--------------------------------------------------------------------------------
+TEST #21: Create User - Without Authentication
+--------------------------------------------------------------------------------
+PURPOSE: Verify unauthenticated users cannot create accounts
+METHOD: POST
+URL: {{baseUrl}}/api/user
+HEADERS:
+  Content-Type: application/json
+BODY:
+{
+  "name": "Hacker",
+  "email": "hacker@evil.com",
+  "password": "password123"
+}
+EXPECTED: 403 Forbidden
+
+--------------------------------------------------------------------------------
+TEST #22: Create User - As Staff (Not Admin)
+--------------------------------------------------------------------------------
+PURPOSE: Verify non-admin cannot create users
+METHOD: POST
+URL: {{baseUrl}}/api/user
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_STAFF_TOKEN_HERE>
+BODY:
+{
+  "name": "New User",
+  "email": "staffcreated@kawaf.fr",
+  "password": "Password123!"
+}
+EXPECTED: 403 Forbidden
+
+--------------------------------------------------------------------------------
+TEST #23: Create User - Invalid Email Format
+--------------------------------------------------------------------------------
+PURPOSE: Test behavior with malformed email
+METHOD: POST
+URL: {{baseUrl}}/api/user
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_ADMIN_TOKEN_HERE>
+BODY:
+{
+  "name": "Bad Email",
+  "email": "notanemail",
+  "password": "Password123!"
+}
+EXPECTED: 400 Bad Request
+EXPECTED RESPONSE:
+{
+  "error": "Invalid email format"
+}
+
+--------------------------------------------------------------------------------
+TEST #24: Create User - With Admin Role
+--------------------------------------------------------------------------------
+PURPOSE: Verify admin can create other admins
+METHOD: POST
+URL: {{baseUrl}}/api/user
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_ADMIN_TOKEN_HERE>
+BODY:
+{
+  "name": "Second Admin",
+  "email": "admin2@kawaf.fr",
+  "password": "AdminPass123!",
+  "role": "ADMIN"
+}
+EXPECTED: 201 Created
+
+
+================================================================================
+                        3. ANIMALS - PUBLIC ACCESS
+================================================================================
+
+--------------------------------------------------------------------------------
+TEST #25: Get All Animals - Public (No Token)
+--------------------------------------------------------------------------------
+PURPOSE: Verify public users see only non-adopted animals
+METHOD: GET
+URL: {{baseUrl}}/api/animals
+HEADERS: (none)
+EXPECTED: 200 OK
+EXPECTED: Array with only isAdopted: false animals
+
+--------------------------------------------------------------------------------
+TEST #26: Get All Animals - As Admin
+--------------------------------------------------------------------------------
+PURPOSE: Verify admin sees ALL animals including adopted
+METHOD: GET
+URL: {{baseUrl}}/api/animals
+HEADERS:
+  Authorization: Bearer <ADD_ADMIN_TOKEN_HERE>
+EXPECTED: 200 OK
+EXPECTED: Array with ALL animals (isAdopted true AND false)
+
+--------------------------------------------------------------------------------
+TEST #27: Get All Animals - As Staff
+--------------------------------------------------------------------------------
+PURPOSE: Verify staff sees ALL animals including adopted
+METHOD: GET
+URL: {{baseUrl}}/api/animals
+HEADERS:
+  Authorization: Bearer <ADD_STAFF_TOKEN_HERE>
+EXPECTED: 200 OK
+EXPECTED: Array with ALL animals
+
+--------------------------------------------------------------------------------
+TEST #28: Get All Animals - As Regular User
+--------------------------------------------------------------------------------
+PURPOSE: Verify USER role sees only non-adopted (same as public)
+METHOD: GET
+URL: {{baseUrl}}/api/animals
+HEADERS:
+  Authorization: Bearer <ADD_USER_TOKEN_HERE>
+EXPECTED: 200 OK
+EXPECTED: Array with only isAdopted: false animals
+
+--------------------------------------------------------------------------------
+TEST #29: Get Single Animal - Valid ID (Public)
+--------------------------------------------------------------------------------
+PURPOSE: Verify anyone can view a single animal by ID
+METHOD: GET
+URL: {{baseUrl}}/api/animals/1
+HEADERS: (none)
+EXPECTED: 200 OK
+EXPECTED RESPONSE: Single animal object
+
+--------------------------------------------------------------------------------
+TEST #30: Get Single Animal - Non-Existent ID
+--------------------------------------------------------------------------------
+PURPOSE: Verify 404 for missing animal
+METHOD: GET
+URL: {{baseUrl}}/api/animals/99999
+HEADERS: (none)
+EXPECTED: 404 Not Found
+EXPECTED RESPONSE:
+{
+  "error": "Animal not found"
+}
+
+--------------------------------------------------------------------------------
+TEST #31: Get Single Animal - Invalid ID (String)
+--------------------------------------------------------------------------------
+PURPOSE: Verify handling of non-numeric ID
+METHOD: GET
+URL: {{baseUrl}}/api/animals/abc
+HEADERS: (none)
+EXPECTED: 400 Bad Request
+EXPECTED RESPONSE:
+{
+  "error": "Invalid animal ID"
+}
+
+--------------------------------------------------------------------------------
+TEST #32: Get Single Animal - Invalid ID (Negative)
+--------------------------------------------------------------------------------
+PURPOSE: Verify handling of negative ID
+METHOD: GET
+URL: {{baseUrl}}/api/animals/-1
+HEADERS: (none)
+EXPECTED: 404 Not Found (valid integer, but no such animal)
+
+--------------------------------------------------------------------------------
+TEST #33: Get Single Animal - Invalid ID (Decimal)
+--------------------------------------------------------------------------------
+PURPOSE: Verify handling of decimal ID
+METHOD: GET
+URL: {{baseUrl}}/api/animals/1.5
+HEADERS: (none)
+EXPECTED: 400 Bad Request
+EXPECTED RESPONSE:
+{
+  "error": "Invalid animal ID"
+}
+
+--------------------------------------------------------------------------------
+TEST #34: Get Single Animal - Can View Adopted Animal
+--------------------------------------------------------------------------------
+PURPOSE: Verify single animal access works even for adopted animals
+METHOD: GET
+URL: {{baseUrl}}/api/animals/<ADOPTED_ANIMAL_ID>
+HEADERS: (none)
+EXPECTED: 200 OK (single item view is always public)
+
+
+================================================================================
+                   4. ANIMALS - AUTHENTICATED OPERATIONS
+================================================================================
+
+--------------------------------------------------------------------------------
+TEST #35: Create Animal - Full Valid Data
+--------------------------------------------------------------------------------
+PURPOSE: Verify authenticated user can create animal with all fields
+METHOD: POST
+URL: {{baseUrl}}/api/animals
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "name": "Whiskers",
+  "photoUrl": "https://example.com/cat.jpg",
+  "age": 3,
+  "weight": 4.5,
+  "sex": "MALE",
+  "temperament": "Playful and friendly",
+  "story": "Found as a stray kitten, now looking for a loving home.",
+  "isAdopted": false
+}
+EXPECTED: 201 Created
+
+--------------------------------------------------------------------------------
+TEST #36: Create Animal - Minimum Required Fields
+--------------------------------------------------------------------------------
+PURPOSE: Verify animal can be created with only name
+METHOD: POST
+URL: {{baseUrl}}/api/animals
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "name": "Mystery Cat"
+}
+EXPECTED: 201 Created
+
+--------------------------------------------------------------------------------
+TEST #37: Create Animal - Missing Name
+--------------------------------------------------------------------------------
+PURPOSE: Verify name is required
+METHOD: POST
+URL: {{baseUrl}}/api/animals
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "age": 2,
+  "sex": "FEMALE"
+}
+EXPECTED: 400 Bad Request
+EXPECTED RESPONSE:
+{
+  "error": "Missing required field: name"
+}
+
+--------------------------------------------------------------------------------
+TEST #38: Create Animal - Without Authentication
+--------------------------------------------------------------------------------
+PURPOSE: Verify unauthenticated users cannot create animals
+METHOD: POST
+URL: {{baseUrl}}/api/animals
+HEADERS:
+  Content-Type: application/json
+BODY:
+{
+  "name": "Unauthorized Cat"
+}
+EXPECTED: 401 Unauthorized
+
+--------------------------------------------------------------------------------
+TEST #39: Create Animal - With Invalid Token
+--------------------------------------------------------------------------------
+PURPOSE: Verify invalid tokens are rejected
+METHOD: POST
+URL: {{baseUrl}}/api/animals
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer invalid.token.string
+BODY:
+{
+  "name": "Token Test Cat"
+}
+EXPECTED: 401 Unauthorized
+
+--------------------------------------------------------------------------------
+TEST #40: Create Animal - Age as String
+--------------------------------------------------------------------------------
+PURPOSE: Verify age string is converted to integer
+METHOD: POST
+URL: http://localhost:3000/api/animals
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <PASTE_YOUR_TOKEN_FROM_TEST_1>
+
+NOTE: In Postman's "Authorization" tab, select "Bearer Token" and paste your token.
+      Or in "Headers" tab, add key "Authorization" with value "Bearer <your-token>"
+
+BODY:
+{
+  "name": "String Age Cat",
+  "age": "5"
+}
+EXPECTED: 201 Created (age should be stored as 5)
+EXPECTED RESPONSE:
+{
+  "id": <number>,
+  "name": "String Age Cat",
+  "age": 5,
+  "isAdopted": false,
+  ...
+}
+
+--------------------------------------------------------------------------------
+TEST #41: Create Animal - Weight as String
+--------------------------------------------------------------------------------
+PURPOSE: Verify weight string is converted to float
+METHOD: POST
+URL: {{baseUrl}}/api/animals
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "name": "String Weight Cat",
+  "weight": "3.7"
+}
+EXPECTED: 201 Created
+
+--------------------------------------------------------------------------------
+TEST #42: Create Animal - Invalid Sex Value
+--------------------------------------------------------------------------------
+PURPOSE: Verify only MALE/FEMALE accepted for sex
+METHOD: POST
+URL: {{baseUrl}}/api/animals
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "name": "Invalid Sex Cat",
+  "sex": "UNKNOWN"
+}
+EXPECTED: 500 Internal Server Error (Prisma enum validation)
+
+--------------------------------------------------------------------------------
+TEST #43: Create Animal - Female Sex
+--------------------------------------------------------------------------------
+PURPOSE: Verify FEMALE sex value works
+METHOD: POST
+URL: {{baseUrl}}/api/animals
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "name": "Female Cat",
+  "sex": "FEMALE"
+}
+EXPECTED: 201 Created
+
+--------------------------------------------------------------------------------
+TEST #44: Create Animal - Already Adopted
+--------------------------------------------------------------------------------
+PURPOSE: Verify can create animal with isAdopted: true
+METHOD: POST
+URL: {{baseUrl}}/api/animals
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "name": "Already Adopted Cat",
+  "isAdopted": true
+}
+EXPECTED: 201 Created
+
+--------------------------------------------------------------------------------
+TEST #45: Create Animal - Empty Name
+--------------------------------------------------------------------------------
+PURPOSE: Verify empty string name is rejected
+METHOD: POST
+URL: {{baseUrl}}/api/animals
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "name": ""
+}
+EXPECTED: 400 Bad Request
+
+--------------------------------------------------------------------------------
+TEST #46: Create Animal - Very Long Name
+--------------------------------------------------------------------------------
+PURPOSE: Test maximum name length handling
+METHOD: POST
+URL: {{baseUrl}}/api/animals
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "name": "ThisIsAVeryLongNameForACatThatProbablyShouldNotBeAllowedButWeAreTestingTheLimitsOfTheSystemToSeeWhatHappensWhenSomeoneTriesToInputAnExtremelyLongStringAsTheNameOfAnAnimalInOurDatabase"
+}
+EXPECTED: 201 Created (or database constraint error)
+
+--------------------------------------------------------------------------------
+TEST #47: Update Animal - Full Update
+--------------------------------------------------------------------------------
+PURPOSE: Verify authenticated user can update all animal fields
+METHOD: PUT
+URL: {{baseUrl}}/api/animals/1
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "name": "Updated Whiskers",
+  "photoUrl": "https://example.com/new-cat.jpg",
+  "age": 4,
+  "weight": 5.0,
+  "sex": "MALE",
+  "temperament": "Even more playful now",
+  "story": "Updated story after a year at the café.",
+  "isAdopted": false
+}
+EXPECTED: 200 OK
+
+--------------------------------------------------------------------------------
+TEST #48: Update Animal - Partial Update (Name Only)
+--------------------------------------------------------------------------------
+PURPOSE: Verify partial updates work
+METHOD: PUT
+URL: {{baseUrl}}/api/animals/1
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "name": "New Name Only"
+}
+EXPECTED: 200 OK
+
+--------------------------------------------------------------------------------
+TEST #49: Update Animal - Mark as Adopted
+--------------------------------------------------------------------------------
+PURPOSE: Verify can mark animal as adopted
+METHOD: PUT
+URL: {{baseUrl}}/api/animals/1
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "isAdopted": true
+}
+EXPECTED: 200 OK
+
+--------------------------------------------------------------------------------
+TEST #50: Update Animal - Mark as Available Again
+--------------------------------------------------------------------------------
+PURPOSE: Verify can un-adopt an animal
+METHOD: PUT
+URL: {{baseUrl}}/api/animals/1
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "isAdopted": false
+}
+EXPECTED: 200 OK
+
+--------------------------------------------------------------------------------
+TEST #51: Update Animal - Non-Existent ID
+--------------------------------------------------------------------------------
+PURPOSE: Verify 404 for updating missing animal
+METHOD: PUT
+URL: {{baseUrl}}/api/animals/99999
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "name": "Ghost Cat"
+}
+EXPECTED: 404 Not Found
+
+--------------------------------------------------------------------------------
+TEST #52: Update Animal - Invalid ID
+--------------------------------------------------------------------------------
+PURPOSE: Verify handling of non-numeric ID in update
+METHOD: PUT
+URL: {{baseUrl}}/api/animals/invalid
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "name": "Test"
+}
+EXPECTED: 400 Bad Request
+
+--------------------------------------------------------------------------------
+TEST #53: Update Animal - Without Authentication
+--------------------------------------------------------------------------------
+PURPOSE: Verify unauthenticated users cannot update animals
+METHOD: PUT
+URL: {{baseUrl}}/api/animals/1
+HEADERS:
+  Content-Type: application/json
+BODY:
+{
+  "name": "Hacked Name"
+}
+EXPECTED: 401 Unauthorized
+
+--------------------------------------------------------------------------------
+TEST #54: Update Animal - Empty Body
+--------------------------------------------------------------------------------
+PURPOSE: Test update with no changes
+METHOD: PUT
+URL: {{baseUrl}}/api/animals/1
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{}
+EXPECTED: 200 OK (no changes made)
+
+--------------------------------------------------------------------------------
+TEST #55: Delete Animal - Valid ID
+--------------------------------------------------------------------------------
+PURPOSE: Verify authenticated user can delete animal
+METHOD: DELETE
+URL: {{baseUrl}}/api/animals/<EXISTING_ID>
+HEADERS:
+  Authorization: Bearer <ADD_TOKEN_HERE>
+EXPECTED: 200 OK
+EXPECTED RESPONSE:
+{
+  "message": "Animal deleted successfully"
+}
+
+--------------------------------------------------------------------------------
+TEST #56: Delete Animal - Non-Existent ID
+--------------------------------------------------------------------------------
+PURPOSE: Verify 404 when deleting missing animal
+METHOD: DELETE
+URL: {{baseUrl}}/api/animals/99999
+HEADERS:
+  Authorization: Bearer <ADD_TOKEN_HERE>
+EXPECTED: 404 Not Found
+
+--------------------------------------------------------------------------------
+TEST #57: Delete Animal - Invalid ID
+--------------------------------------------------------------------------------
+PURPOSE: Verify handling of non-numeric ID in delete
+METHOD: DELETE
+URL: {{baseUrl}}/api/animals/abc
+HEADERS:
+  Authorization: Bearer <ADD_TOKEN_HERE>
+EXPECTED: 400 Bad Request
+
+--------------------------------------------------------------------------------
+TEST #58: Delete Animal - Without Authentication
+--------------------------------------------------------------------------------
+PURPOSE: Verify unauthenticated users cannot delete animals
+METHOD: DELETE
+URL: {{baseUrl}}/api/animals/1
+HEADERS: (none)
+EXPECTED: 401 Unauthorized
+
+--------------------------------------------------------------------------------
+TEST #59: Delete Animal - Already Deleted (Double Delete)
+--------------------------------------------------------------------------------
+PURPOSE: Verify proper handling of double delete attempts
+METHOD: DELETE
+URL: {{baseUrl}}/api/animals/<JUST_DELETED_ID>
+HEADERS:
+  Authorization: Bearer <ADD_TOKEN_HERE>
+EXPECTED: 404 Not Found
+
+
+================================================================================
+                         5. MENU - PUBLIC ACCESS
+================================================================================
+
+--------------------------------------------------------------------------------
+TEST #60: Get All Menu Items - Public (No Token)
+--------------------------------------------------------------------------------
+PURPOSE: Verify public users see only available items
+METHOD: GET
+URL: {{baseUrl}}/api/menu
+HEADERS: (none)
+EXPECTED: 200 OK
+EXPECTED: Array with only isAvailable: true items
+
+--------------------------------------------------------------------------------
+TEST #61: Get All Menu Items - As Admin
+--------------------------------------------------------------------------------
+PURPOSE: Verify admin sees ALL items including unavailable
+METHOD: GET
+URL: {{baseUrl}}/api/menu
+HEADERS:
+  Authorization: Bearer <ADD_ADMIN_TOKEN_HERE>
+EXPECTED: 200 OK
+EXPECTED: Array with ALL items
+
+--------------------------------------------------------------------------------
+TEST #62: Get All Menu Items - As Staff
+--------------------------------------------------------------------------------
+PURPOSE: Verify staff sees ALL items
+METHOD: GET
+URL: {{baseUrl}}/api/menu
+HEADERS:
+  Authorization: Bearer <ADD_STAFF_TOKEN_HERE>
+EXPECTED: 200 OK
+EXPECTED: Array with ALL items
+
+--------------------------------------------------------------------------------
+TEST #63: Get All Menu Items - As Regular User
+--------------------------------------------------------------------------------
+PURPOSE: Verify USER role sees only available (same as public)
+METHOD: GET
+URL: {{baseUrl}}/api/menu
+HEADERS:
+  Authorization: Bearer <ADD_USER_TOKEN_HERE>
+EXPECTED: 200 OK
+EXPECTED: Array with only isAvailable: true items
+
+--------------------------------------------------------------------------------
+TEST #64: Get Single Menu Item - Valid ID (Public)
+--------------------------------------------------------------------------------
+PURPOSE: Verify anyone can view a single menu item
+METHOD: GET
+URL: {{baseUrl}}/api/menu/1
+HEADERS: (none)
+EXPECTED: 200 OK
+
+--------------------------------------------------------------------------------
+TEST #65: Get Single Menu Item - Non-Existent ID
+--------------------------------------------------------------------------------
+PURPOSE: Verify 404 for missing menu item
+METHOD: GET
+URL: {{baseUrl}}/api/menu/99999
+HEADERS: (none)
+EXPECTED: 404 Not Found
+EXPECTED RESPONSE:
+{
+  "error": "Menu item not found"
+}
+
+--------------------------------------------------------------------------------
+TEST #66: Get Single Menu Item - Invalid ID
+--------------------------------------------------------------------------------
+PURPOSE: Verify handling of non-numeric ID
+METHOD: GET
+URL: {{baseUrl}}/api/menu/abc
+HEADERS: (none)
+EXPECTED: 400 Bad Request
+EXPECTED RESPONSE:
+{
+  "error": "Invalid menu item id"
+}
+
+
+================================================================================
+                    6. MENU - AUTHENTICATED OPERATIONS
+================================================================================
+
+--------------------------------------------------------------------------------
+TEST #67: Create Menu Item - Full Valid Data
+--------------------------------------------------------------------------------
+PURPOSE: Verify authenticated user can create menu item
+METHOD: POST
+URL: {{baseUrl}}/api/menu
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "name": "Cappuccino",
+  "description": "Classic Italian coffee with steamed milk foam",
+  "price": 4.50,
+  "photoUrl": "https://example.com/cappuccino.jpg",
+  "popularity": 85,
+  "isAvailable": true
+}
+EXPECTED: 201 Created
+
+--------------------------------------------------------------------------------
+TEST #68: Create Menu Item - Minimum Required Fields
+--------------------------------------------------------------------------------
+PURPOSE: Verify item can be created with only name and price
+METHOD: POST
+URL: {{baseUrl}}/api/menu
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "name": "Espresso",
+  "price": 2.50
+}
+EXPECTED: 201 Created
+
+--------------------------------------------------------------------------------
+TEST #69: Create Menu Item - Missing Name
+--------------------------------------------------------------------------------
+PURPOSE: Verify name is required
+METHOD: POST
+URL: {{baseUrl}}/api/menu
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "price": 3.00
+}
+EXPECTED: 400 Bad Request
+EXPECTED RESPONSE:
+{
+  "error": "Name and price are required"
+}
+
+--------------------------------------------------------------------------------
+TEST #70: Create Menu Item - Missing Price
+--------------------------------------------------------------------------------
+PURPOSE: Verify price is required
+METHOD: POST
+URL: {{baseUrl}}/api/menu
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "name": "No Price Item"
+}
+EXPECTED: 400 Bad Request
+
+--------------------------------------------------------------------------------
+TEST #71: Create Menu Item - Price as String
+--------------------------------------------------------------------------------
+PURPOSE: Verify price string is converted to Decimal
+METHOD: POST
+URL: {{baseUrl}}/api/menu
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "name": "String Price Item",
+  "price": "5.99"
+}
+EXPECTED: 201 Created
+
+--------------------------------------------------------------------------------
+TEST #72: Create Menu Item - Zero Price
+--------------------------------------------------------------------------------
+PURPOSE: Verify zero price is accepted (free items)
+METHOD: POST
+URL: {{baseUrl}}/api/menu
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "name": "Free Water",
+  "price": 0
+}
+EXPECTED: 201 Created
+
+--------------------------------------------------------------------------------
+TEST #73: Create Menu Item - Negative Price
+--------------------------------------------------------------------------------
+PURPOSE: Test handling of negative price
+METHOD: POST
+URL: {{baseUrl}}/api/menu
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "name": "Negative Price Item",
+  "price": -5.00
+}
+EXPECTED: 400 Bad Request
+EXPECTED RESPONSE:
+{
+  "error": "Price cannot be negative"
+}
+
+--------------------------------------------------------------------------------
+TEST #74: Create Menu Item - High Precision Price
+--------------------------------------------------------------------------------
+PURPOSE: Verify decimal precision handling (6,2)
+METHOD: POST
+URL: {{baseUrl}}/api/menu
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "name": "Precision Test",
+  "price": 1234.56
+}
+EXPECTED: 201 Created
+
+--------------------------------------------------------------------------------
+TEST #75: Create Menu Item - Price Exceeds Decimal Range
+--------------------------------------------------------------------------------
+PURPOSE: Test price exceeding Decimal(6,2) limit
+METHOD: POST
+URL: {{baseUrl}}/api/menu
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "name": "Expensive Item",
+  "price": 123456.78
+}
+EXPECTED: 500 Internal Server Error (exceeds 4 digits before decimal)
+
+--------------------------------------------------------------------------------
+TEST #76: Create Menu Item - Duplicate Name
+--------------------------------------------------------------------------------
+PURPOSE: Verify duplicate names are rejected
+METHOD: POST
+URL: {{baseUrl}}/api/menu
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "name": "Cappuccino",
+  "price": 5.00
+}
+EXPECTED: 400 Bad Request
+EXPECTED RESPONSE:
+{
+  "error": "An item with this name already exists."
+}
+
+--------------------------------------------------------------------------------
+TEST #77: Create Menu Item - Without Authentication
+--------------------------------------------------------------------------------
+PURPOSE: Verify unauthenticated users cannot create menu items
+METHOD: POST
+URL: {{baseUrl}}/api/menu
+HEADERS:
+  Content-Type: application/json
+BODY:
+{
+  "name": "Hacker Coffee",
+  "price": 1.00
+}
+EXPECTED: 401 Unauthorized
+
+--------------------------------------------------------------------------------
+TEST #78: Create Menu Item - Unavailable by Default False
+--------------------------------------------------------------------------------
+PURPOSE: Verify isAvailable defaults to true
+METHOD: POST
+URL: {{baseUrl}}/api/menu
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "name": "Default Available Item",
+  "price": 3.50
+}
+EXPECTED: 201 Created (isAvailable should be true)
+
+--------------------------------------------------------------------------------
+TEST #79: Create Menu Item - Set as Unavailable
+--------------------------------------------------------------------------------
+PURPOSE: Verify can create unavailable item
+METHOD: POST
+URL: {{baseUrl}}/api/menu
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "name": "Seasonal Item",
+  "price": 6.00,
+  "isAvailable": false
+}
+EXPECTED: 201 Created
+
+--------------------------------------------------------------------------------
+TEST #80: Update Menu Item - Full Update
+--------------------------------------------------------------------------------
+PURPOSE: Verify authenticated user can update all fields
+METHOD: PUT
+URL: {{baseUrl}}/api/menu/1
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "name": "Updated Cappuccino",
+  "description": "Now with extra foam!",
+  "price": 5.00,
+  "photoUrl": "https://example.com/new-cappuccino.jpg",
+  "popularity": 95,
+  "isAvailable": true
+}
+EXPECTED: 200 OK
+
+--------------------------------------------------------------------------------
+TEST #81: Update Menu Item - Change Price Only
+--------------------------------------------------------------------------------
+PURPOSE: Verify partial update works
+METHOD: PUT
+URL: {{baseUrl}}/api/menu/1
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "price": 5.50
+}
+EXPECTED: 200 OK
+
+--------------------------------------------------------------------------------
+TEST #82: Update Menu Item - Mark as Unavailable
+--------------------------------------------------------------------------------
+PURPOSE: Verify can toggle availability
+METHOD: PUT
+URL: {{baseUrl}}/api/menu/1
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "isAvailable": false
+}
+EXPECTED: 200 OK
+
+--------------------------------------------------------------------------------
+TEST #83: Update Menu Item - Rename to Existing Name
+--------------------------------------------------------------------------------
+PURPOSE: Verify duplicate name on update is rejected
+METHOD: PUT
+URL: {{baseUrl}}/api/menu/2
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "name": "Cappuccino"
+}
+EXPECTED: 400 Bad Request
+EXPECTED RESPONSE:
+{
+  "error": "An item with this name already exists"
+}
+
+--------------------------------------------------------------------------------
+TEST #84: Update Menu Item - Non-Existent ID
+--------------------------------------------------------------------------------
+PURPOSE: Verify 404 for updating missing item
+METHOD: PUT
+URL: {{baseUrl}}/api/menu/99999
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "name": "Ghost Item"
+}
+EXPECTED: 404 Not Found
+
+--------------------------------------------------------------------------------
+TEST #85: Update Menu Item - Invalid ID
+--------------------------------------------------------------------------------
+PURPOSE: Verify handling of non-numeric ID
+METHOD: PUT
+URL: {{baseUrl}}/api/menu/invalid
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "price": 10.00
+}
+EXPECTED: 400 Bad Request
+
+--------------------------------------------------------------------------------
+TEST #86: Update Menu Item - Without Authentication
+--------------------------------------------------------------------------------
+PURPOSE: Verify unauthenticated users cannot update
+METHOD: PUT
+URL: {{baseUrl}}/api/menu/1
+HEADERS:
+  Content-Type: application/json
+BODY:
+{
+  "price": 0.01
+}
+EXPECTED: 401 Unauthorized
+
+--------------------------------------------------------------------------------
+TEST #87: Delete Menu Item - Valid ID
+--------------------------------------------------------------------------------
+PURPOSE: Verify authenticated user can delete menu item
+METHOD: DELETE
+URL: {{baseUrl}}/api/menu/<EXISTING_ID>
+HEADERS:
+  Authorization: Bearer <ADD_TOKEN_HERE>
+EXPECTED: 200 OK
+EXPECTED RESPONSE:
+{
+  "message": "Menu item deleted successfully"
+}
+
+--------------------------------------------------------------------------------
+TEST #88: Delete Menu Item - Non-Existent ID
+--------------------------------------------------------------------------------
+PURPOSE: Verify 404 when deleting missing item
+METHOD: DELETE
+URL: {{baseUrl}}/api/menu/99999
+HEADERS:
+  Authorization: Bearer <ADD_TOKEN_HERE>
+EXPECTED: 404 Not Found
+
+--------------------------------------------------------------------------------
+TEST #89: Delete Menu Item - Invalid ID
+--------------------------------------------------------------------------------
+PURPOSE: Verify handling of non-numeric ID
+METHOD: DELETE
+URL: {{baseUrl}}/api/menu/abc
+HEADERS:
+  Authorization: Bearer <ADD_TOKEN_HERE>
+EXPECTED: 400 Bad Request
+
+--------------------------------------------------------------------------------
+TEST #90: Delete Menu Item - Without Authentication
+--------------------------------------------------------------------------------
+PURPOSE: Verify unauthenticated users cannot delete
+METHOD: DELETE
+URL: {{baseUrl}}/api/menu/1
+HEADERS: (none)
+EXPECTED: 401 Unauthorized
+
+
+================================================================================
+                        7. EVENTS - PUBLIC ACCESS
+================================================================================
+
+--------------------------------------------------------------------------------
+TEST #91: Get All Events - Public (No Token)
+--------------------------------------------------------------------------------
+PURPOSE: Verify public users see only events from last 7 days
+METHOD: GET
+URL: {{baseUrl}}/api/events
+HEADERS: (none)
+EXPECTED: 200 OK
+EXPECTED: Array with only events where date >= 7 days ago
+
+--------------------------------------------------------------------------------
+TEST #92: Get All Events - As Admin
+--------------------------------------------------------------------------------
+PURPOSE: Verify admin sees ALL events including old ones
+METHOD: GET
+URL: {{baseUrl}}/api/events
+HEADERS:
+  Authorization: Bearer <ADD_ADMIN_TOKEN_HERE>
+EXPECTED: 200 OK
+EXPECTED: Array with ALL events
+
+--------------------------------------------------------------------------------
+TEST #93: Get All Events - As Staff
+--------------------------------------------------------------------------------
+PURPOSE: Verify staff sees ALL events
+METHOD: GET
+URL: {{baseUrl}}/api/events
+HEADERS:
+  Authorization: Bearer <ADD_STAFF_TOKEN_HERE>
+EXPECTED: 200 OK
+EXPECTED: Array with ALL events
+
+--------------------------------------------------------------------------------
+TEST #94: Get All Events - As Regular User
+--------------------------------------------------------------------------------
+PURPOSE: Verify USER role sees filtered events (same as public)
+METHOD: GET
+URL: {{baseUrl}}/api/events
+HEADERS:
+  Authorization: Bearer <ADD_USER_TOKEN_HERE>
+EXPECTED: 200 OK
+EXPECTED: Array with only recent events
+
+--------------------------------------------------------------------------------
+TEST #95: Get Single Event - Valid ID (Public)
+--------------------------------------------------------------------------------
+PURPOSE: Verify anyone can view a single event
+METHOD: GET
+URL: {{baseUrl}}/api/events/1
+HEADERS: (none)
+EXPECTED: 200 OK
+
+--------------------------------------------------------------------------------
+TEST #96: Get Single Event - Non-Existent ID
+--------------------------------------------------------------------------------
+PURPOSE: Verify 404 for missing event
+METHOD: GET
+URL: {{baseUrl}}/api/events/99999
+HEADERS: (none)
+EXPECTED: 404 Not Found
+EXPECTED RESPONSE:
+{
+  "error": "Event not found"
+}
+
+--------------------------------------------------------------------------------
+TEST #97: Get Single Event - Invalid ID
+--------------------------------------------------------------------------------
+PURPOSE: Verify handling of non-numeric ID
+METHOD: GET
+URL: {{baseUrl}}/api/events/abc
+HEADERS: (none)
+EXPECTED: 400 Bad Request
+EXPECTED RESPONSE:
+{
+  "error": "Invalid event id"
+}
+
+
+================================================================================
+                   8. EVENTS - AUTHENTICATED OPERATIONS
+================================================================================
+
+--------------------------------------------------------------------------------
+TEST #98: Create Event - Full Valid Data
+--------------------------------------------------------------------------------
+PURPOSE: Verify authenticated user can create event
+METHOD: POST
+URL: {{baseUrl}}/api/events
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "title": "Cat Yoga Session",
+  "description": "Join us for a relaxing yoga session with our furry friends!",
+  "date": "2026-02-14T10:00:00.000Z",
+  "photoUrl": "https://example.com/cat-yoga.jpg",
+  "location": "Main Hall"
+}
+EXPECTED: 201 Created
+
+--------------------------------------------------------------------------------
+TEST #99: Create Event - Minimum Required Fields
+--------------------------------------------------------------------------------
+PURPOSE: Verify event can be created with only title and date
+METHOD: POST
+URL: {{baseUrl}}/api/events
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "title": "Quick Meetup",
+  "date": "2026-03-01T15:00:00.000Z"
+}
+EXPECTED: 201 Created
+
+--------------------------------------------------------------------------------
+TEST #100: Create Event - Missing Title
+--------------------------------------------------------------------------------
+PURPOSE: Verify title is required
+METHOD: POST
+URL: {{baseUrl}}/api/events
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "date": "2026-03-01T15:00:00.000Z"
+}
+EXPECTED: 400 Bad Request
+EXPECTED RESPONSE:
+{
+  "error": "Missing required fields: title and a valid date"
+}
+
+--------------------------------------------------------------------------------
+TEST #101: Create Event - Missing Date
+--------------------------------------------------------------------------------
+PURPOSE: Verify date is required
+METHOD: POST
+URL: {{baseUrl}}/api/events
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "title": "No Date Event"
+}
+EXPECTED: 400 Bad Request
+
+--------------------------------------------------------------------------------
+TEST #102: Create Event - Invalid Date Format
+--------------------------------------------------------------------------------
+PURPOSE: Verify invalid date strings are rejected
+METHOD: POST
+URL: {{baseUrl}}/api/events
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "title": "Bad Date Event",
+  "date": "not-a-date"
+}
+EXPECTED: 400 Bad Request
+
+--------------------------------------------------------------------------------
+TEST #103: Create Event - Past Date
+--------------------------------------------------------------------------------
+PURPOSE: Verify can create events in the past (for records)
+METHOD: POST
+URL: {{baseUrl}}/api/events
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "title": "Past Event",
+  "date": "2020-01-01T12:00:00.000Z"
+}
+EXPECTED: 201 Created
+
+--------------------------------------------------------------------------------
+TEST #104: Create Event - Far Future Date
+--------------------------------------------------------------------------------
+PURPOSE: Verify can create events far in the future
+METHOD: POST
+URL: {{baseUrl}}/api/events
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "title": "Future Event",
+  "date": "2030-12-31T23:59:59.000Z"
+}
+EXPECTED: 201 Created
+
+--------------------------------------------------------------------------------
+TEST #105: Create Event - Without Authentication
+--------------------------------------------------------------------------------
+PURPOSE: Verify unauthenticated users cannot create events
+METHOD: POST
+URL: {{baseUrl}}/api/events
+HEADERS:
+  Content-Type: application/json
+BODY:
+{
+  "title": "Hacker Event",
+  "date": "2026-01-20T10:00:00.000Z"
+}
+EXPECTED: 401 Unauthorized
+
+--------------------------------------------------------------------------------
+TEST #106: Create Event - Date Only (No Time)
+--------------------------------------------------------------------------------
+PURPOSE: Verify date-only strings are handled
+METHOD: POST
+URL: {{baseUrl}}/api/events
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "title": "Date Only Event",
+  "date": "2026-04-15"
+}
+EXPECTED: 201 Created (time will be midnight UTC)
+
+--------------------------------------------------------------------------------
+TEST #107: Update Event - Full Update
+--------------------------------------------------------------------------------
+PURPOSE: Verify authenticated user can update all fields
+METHOD: PUT
+URL: {{baseUrl}}/api/events/1
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "title": "Updated Cat Yoga",
+  "description": "Now with more cats!",
+  "date": "2026-02-15T11:00:00.000Z",
+  "photoUrl": "https://example.com/updated-yoga.jpg",
+  "location": "New Venue"
+}
+EXPECTED: 200 OK
+
+--------------------------------------------------------------------------------
+TEST #108: Update Event - Change Date Only
+--------------------------------------------------------------------------------
+PURPOSE: Verify partial update works
+METHOD: PUT
+URL: {{baseUrl}}/api/events/1
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "date": "2026-02-20T10:00:00.000Z"
+}
+EXPECTED: 200 OK
+
+--------------------------------------------------------------------------------
+TEST #109: Update Event - Change Title Only
+--------------------------------------------------------------------------------
+PURPOSE: Verify can update just the title
+METHOD: PUT
+URL: {{baseUrl}}/api/events/1
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "title": "Renamed Event"
+}
+EXPECTED: 200 OK
+
+--------------------------------------------------------------------------------
+TEST #110: Update Event - Non-Existent ID
+--------------------------------------------------------------------------------
+PURPOSE: Verify 404 for updating missing event
+METHOD: PUT
+URL: {{baseUrl}}/api/events/99999
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "title": "Ghost Event"
+}
+EXPECTED: 404 Not Found
+
+--------------------------------------------------------------------------------
+TEST #111: Update Event - Invalid ID
+--------------------------------------------------------------------------------
+PURPOSE: Verify handling of non-numeric ID
+METHOD: PUT
+URL: {{baseUrl}}/api/events/invalid
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "title": "Test"
+}
+EXPECTED: 400 Bad Request
+
+--------------------------------------------------------------------------------
+TEST #112: Update Event - Without Authentication
+--------------------------------------------------------------------------------
+PURPOSE: Verify unauthenticated users cannot update
+METHOD: PUT
+URL: {{baseUrl}}/api/events/1
+HEADERS:
+  Content-Type: application/json
+BODY:
+{
+  "title": "Hacked Event"
+}
+EXPECTED: 401 Unauthorized
+
+--------------------------------------------------------------------------------
+TEST #113: Update Event - Invalid Date
+--------------------------------------------------------------------------------
+PURPOSE: Verify invalid date on update is rejected
+METHOD: PUT
+URL: {{baseUrl}}/api/events/1
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "date": "invalid-date-here"
+}
+EXPECTED: 400 Bad Request
+EXPECTED RESPONSE:
+{
+  "error": "Invalid date format"
+}
+
+--------------------------------------------------------------------------------
+TEST #114: Delete Event - Valid ID
+--------------------------------------------------------------------------------
+PURPOSE: Verify authenticated user can delete event
+METHOD: DELETE
+URL: {{baseUrl}}/api/events/<EXISTING_ID>
+HEADERS:
+  Authorization: Bearer <ADD_TOKEN_HERE>
+EXPECTED: 200 OK
+EXPECTED RESPONSE:
+{
+  "message": "Event deleted successfully"
+}
+
+--------------------------------------------------------------------------------
+TEST #115: Delete Event - Non-Existent ID
+--------------------------------------------------------------------------------
+PURPOSE: Verify 404 when deleting missing event
+METHOD: DELETE
+URL: {{baseUrl}}/api/events/99999
+HEADERS:
+  Authorization: Bearer <ADD_TOKEN_HERE>
+EXPECTED: 404 Not Found
+
+--------------------------------------------------------------------------------
+TEST #116: Delete Event - Invalid ID
+--------------------------------------------------------------------------------
+PURPOSE: Verify handling of non-numeric ID
+METHOD: DELETE
+URL: {{baseUrl}}/api/events/abc
+HEADERS:
+  Authorization: Bearer <ADD_TOKEN_HERE>
+EXPECTED: 400 Bad Request
+
+--------------------------------------------------------------------------------
+TEST #117: Delete Event - Without Authentication
+--------------------------------------------------------------------------------
+PURPOSE: Verify unauthenticated users cannot delete
+METHOD: DELETE
+URL: {{baseUrl}}/api/events/1
+HEADERS: (none)
+EXPECTED: 401 Unauthorized
+
+
+================================================================================
+                    9. EDGE CASES & ERROR HANDLING
+================================================================================
+
+--------------------------------------------------------------------------------
+TEST #118: API with Malformed Authorization Header
+--------------------------------------------------------------------------------
+PURPOSE: Test various malformed auth headers
+METHOD: GET
+URL: {{baseUrl}}/api/animals
+HEADERS:
+  Authorization: NotBearer token123
+EXPECTED: 200 OK (treated as no auth, filtered results)
+
+--------------------------------------------------------------------------------
+TEST #119: API with Empty Authorization Header
+--------------------------------------------------------------------------------
+PURPOSE: Test empty auth header
+METHOD: GET
+URL: {{baseUrl}}/api/animals
+HEADERS:
+  Authorization: 
+EXPECTED: 200 OK (treated as no auth)
+
+--------------------------------------------------------------------------------
+TEST #120: API with Bearer But No Token
+--------------------------------------------------------------------------------
+PURPOSE: Test "Bearer " with no actual token
+METHOD: GET
+URL: {{baseUrl}}/api/animals
+HEADERS:
+  Authorization: Bearer 
+EXPECTED: 200 OK (treated as invalid, public access)
+
+--------------------------------------------------------------------------------
+TEST #121: POST with Content-Type Not JSON
+--------------------------------------------------------------------------------
+PURPOSE: Test wrong content type
+METHOD: POST
+URL: {{baseUrl}}/api/animals
+HEADERS:
+  Content-Type: text/plain
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY (raw text):
+name=TestCat
+EXPECTED: 500 Internal Server Error (JSON parse error)
+
+--------------------------------------------------------------------------------
+TEST #122: POST with Empty Body
+--------------------------------------------------------------------------------
+PURPOSE: Test empty POST body
+METHOD: POST
+URL: {{baseUrl}}/api/animals
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY: (empty)
+EXPECTED: 500 Internal Server Error or 400
+
+--------------------------------------------------------------------------------
+TEST #123: Request to Non-Existent Endpoint
+--------------------------------------------------------------------------------
+PURPOSE: Verify 404 for unknown routes
+METHOD: GET
+URL: {{baseUrl}}/api/nonexistent
+EXPECTED: 404 Not Found
+
+--------------------------------------------------------------------------------
+TEST #124: OPTIONS Request (CORS Preflight)
+--------------------------------------------------------------------------------
+PURPOSE: Test CORS preflight handling
+METHOD: OPTIONS
+URL: {{baseUrl}}/api/animals
+EXPECTED: 200 or 204 (depends on Next.js config)
+
+--------------------------------------------------------------------------------
+TEST #125: HEAD Request
+--------------------------------------------------------------------------------
+PURPOSE: Test HEAD method handling
+METHOD: HEAD
+URL: {{baseUrl}}/api/animals
+EXPECTED: 200 OK (with headers but no body)
+
+--------------------------------------------------------------------------------
+TEST #126: PATCH Method (Not Implemented)
+--------------------------------------------------------------------------------
+PURPOSE: Verify PATCH is not supported
+METHOD: PATCH
+URL: {{baseUrl}}/api/animals/1
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "name": "Patched"
+}
+EXPECTED: 405 Method Not Allowed
+
+--------------------------------------------------------------------------------
+TEST #127: Very Large Request Body
+--------------------------------------------------------------------------------
+PURPOSE: Test large payload handling
+METHOD: POST
+URL: {{baseUrl}}/api/animals
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "name": "Large Story Cat",
+  "story": "<PASTE 10MB OF TEXT HERE>"
+}
+EXPECTED: 413 Payload Too Large or 500 Error
+
+--------------------------------------------------------------------------------
+TEST #128: Unicode/Emoji in Content
+--------------------------------------------------------------------------------
+PURPOSE: Test unicode handling
+METHOD: POST
+URL: {{baseUrl}}/api/animals
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "name": "Kitty 🐱 Cat",
+  "temperament": "Très gentil 😊",
+  "story": "日本語テスト 中文测试 العربية"
+}
+EXPECTED: 201 Created
+
+--------------------------------------------------------------------------------
+TEST #129: Special Characters in Content
+--------------------------------------------------------------------------------
+PURPOSE: Test special character handling
+METHOD: POST
+URL: {{baseUrl}}/api/animals
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "name": "O'Malley <script>alert('xss')</script>",
+  "story": "Contains \"quotes\" and 'apostrophes' and <html> tags"
+}
+EXPECTED: 201 Created (stored as-is, XSS prevention in frontend)
+
+--------------------------------------------------------------------------------
+TEST #130: Null Values in Fields
+--------------------------------------------------------------------------------
+PURPOSE: Test explicit null values
+METHOD: POST
+URL: {{baseUrl}}/api/animals
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY:
+{
+  "name": "Null Test Cat",
+  "photoUrl": null,
+  "age": null,
+  "weight": null,
+  "sex": null,
+  "temperament": null,
+  "story": null
+}
+EXPECTED: 201 Created
+
+--------------------------------------------------------------------------------
+TEST #131: Rate Limiting Test (Rapid Requests)
+--------------------------------------------------------------------------------
+PURPOSE: Test if rate limiting exists (run 100 requests quickly)
+METHOD: GET
+URL: {{baseUrl}}/api/animals
+HEADERS: (none)
+EXPECTED: 200 OK (unless rate limiting implemented, then 429)
+
+--------------------------------------------------------------------------------
+TEST #132: Concurrent Create Requests
+--------------------------------------------------------------------------------
+PURPOSE: Test race conditions on creation
+METHOD: POST (send multiple simultaneously)
+URL: {{baseUrl}}/api/menu
+HEADERS:
+  Content-Type: application/json
+  Authorization: Bearer <ADD_TOKEN_HERE>
+BODY (same for all):
+{
+  "name": "Concurrent Test Item",
+  "price": 1.00
+}
+EXPECTED: One succeeds (201), others fail (400 duplicate name)
+
+
+================================================================================
+                           TEST EXECUTION NOTES
+================================================================================
+
+1. RUN ORDER RECOMMENDATION:
+   - Start with Login tests to get tokens
+   - Then run GET tests (non-destructive)
+   - Then run POST tests (creates data)
+   - Then run PUT tests (modifies data)
+   - Finally run DELETE tests (removes data)
+
+2. TOKEN MANAGEMENT:
+   - Save ADMIN token after Test #1
+   - Create STAFF user (Test #15) and get token via login
+   - Create USER user (Test #16) and get token via login
+   - Use appropriate tokens for role-based tests
+
+3. CLEANUP:
+   - After testing, you may want to reset your database
+   - Run: npx prisma migrate reset
+
+4. ENVIRONMENT VARIABLES:
+   - baseUrl: http://localhost:3000
+   - adminToken: (from Test #1)
+   - staffToken: (from logging in as staff)
+   - userToken: (from logging in as user)
+
+================================================================================
+                              END OF TEST SUITE
+================================================================================
+Total Tests: 132
+
+Categories:
+- Authentication: 8 tests
+- User Management: 16 tests
+- Animals (Public): 10 tests
+- Animals (Authenticated): 25 tests
+- Menu (Public): 7 tests
+- Menu (Authenticated): 24 tests
+- Events (Public): 7 tests
+- Events (Authenticated): 20 tests
+- Edge Cases: 15 tests

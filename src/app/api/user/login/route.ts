@@ -6,7 +6,12 @@ import jwt from 'jsonwebtoken';
 export async function POST(request: NextRequest) {
   try {
     const { email, password } = await request.json();
-    const JWT_SECRET = process.env.JWT_SECRET || 'your-fallback-secret';
+    const JWT_SECRET = process.env.JWT_SECRET_KEY || 'fallback_secret';
+
+    // Validate required fields
+    if (!email || !password) {
+      return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
+    }
 
     // 1. Find user by email
     const user = await prisma.user.findUnique({ where: { email } });

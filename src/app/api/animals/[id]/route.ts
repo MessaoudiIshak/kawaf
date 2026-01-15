@@ -22,8 +22,10 @@ const getErrorMessage = (error: unknown) => {
     return 'Unknown error';
 };
 
-// Helper: Ensure the ID is a valid number to prevent database crashes
+// Helper: Ensure the ID is a valid integer to prevent database crashes
 const parseId = (id: string) => {
+    // Reject if not a valid integer (includes decimals like "1.5")
+    if (!/^-?\d+$/.test(id)) return null;
     const parsedId = parseInt(id, 10);
     return Number.isNaN(parsedId) ? null : parsedId;
 };

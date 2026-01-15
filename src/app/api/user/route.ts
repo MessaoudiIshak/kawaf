@@ -47,6 +47,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Email, password, and name are required' }, { status: 400 });
     }
 
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return NextResponse.json({ error: 'Invalid email format' }, { status: 400 });
+    }
+
     const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
 
     const newUser = await prisma.user.create({

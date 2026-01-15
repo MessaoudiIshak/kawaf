@@ -72,7 +72,16 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // 2. Create the item
+        // 2. Validation: Price cannot be negative
+        const priceValue = typeof payload.price === 'string' ? parseFloat(payload.price) : payload.price;
+        if (priceValue < 0) {
+            return NextResponse.json(
+                { error: 'Price cannot be negative' },
+                { status: 400 }
+            );
+        }
+
+        // 3. Create the item
         const newMenuItem = await prisma.menuItem.create({
             data: {
                 name: payload.name,

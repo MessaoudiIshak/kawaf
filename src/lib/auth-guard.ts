@@ -16,7 +16,7 @@ export interface AuthStatus {
 
 export async function getAuthStatus(request: NextRequest): Promise<AuthStatus> {
   const authHeader = request.headers.get('authorization');
-  const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret';
+  const JWT_SECRET = process.env.JWT_SECRET_KEY || 'fallback_secret';
 
   const noneState: AuthStatus = {
     isAuth: false,

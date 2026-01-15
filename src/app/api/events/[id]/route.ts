@@ -30,7 +30,9 @@ const normalizeDate = (value?: string) => {
 	return Number.isNaN(parsed.getTime()) ? undefined : parsed;
 };
 
+// Helper: Ensure the ID is a valid integer (rejects decimals)
 const parseEventId = (id: string) => {
+	if (!/^-?\d+$/.test(id)) return null;
 	const eventId = parseInt(id, 10);
 	return Number.isNaN(eventId) ? null : eventId;
 };
@@ -88,6 +90,17 @@ export async function PUT(request: NextRequest, { params }: Context) {
 		}
 
 		const payload: EventPayload = await request.json();
+
+		// Validate date if provided
+		if (payload.date !== undefined) {
+			const parsedDate = new Date(payload.date);
+			if (Number.isNaN(parsedDate.getTime())) {
+				return NextResponse.json(
+					{ error: 'Invalid date format' },
+					{ status: 400 }
+				);
+			}
+		}
 
 		const updatedEvent = await prisma.event.update({
 			where: { id: eventId },

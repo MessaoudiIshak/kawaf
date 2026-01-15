@@ -545,3 +545,6 @@ npm run build
 ---
 
 **Backend API implementation is complete. Next step: build the frontend pages.**
+
+
+TO DO : run last 3 tests for postman, impliment an isPosted for event, impliment news for the backend

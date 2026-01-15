@@ -20,8 +20,9 @@ const getErrorMessage = (error: unknown) => {
     return 'Unknown error';
 };
 
-// Helper: Ensure the ID is a valid number
+// Helper: Ensure the ID is a valid integer (rejects decimals)
 const parseMenuId = (id: string) => {
+    if (!/^-?\d+$/.test(id)) return null;
     const menuId = parseInt(id, 10);
     return Number.isNaN(menuId) ? null : menuId;
 };
