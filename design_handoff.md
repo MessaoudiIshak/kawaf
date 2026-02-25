@@ -43,6 +43,12 @@ L'ensemble du système backend est terminé et prêt à alimenter le site. Voici
 - Créer de nouveaux comptes (Admin uniquement)
 - Voir tous les utilisateurs enregistrés (Admin uniquement)
 
+### 📝 Blog/Articles
+- Afficher tous les articles de blog publiés
+- Montrer les détails : titre, contenu, auteur, date de création, photo optionnelle
+- Les articles non publiés sont cachés aux visiteurs mais visibles pour le Staff/Admin
+- Ajouter, modifier ou supprimer des articles de blog
+
 ---
 
 ## 🚧 Fonctionnalités en Développement

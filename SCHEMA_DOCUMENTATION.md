@@ -62,11 +62,27 @@
 
 ---
 
+## Table: BlogPost (Article de Blog)
+
+| Attributs | Explication |
+|-----------|-------------|
+| id | Identifiant unique de l'article de blog |
+| title | Titre de l'article de blog |
+| content | Contenu textuel complet de l'article |
+| photoUrl | Lien vers la photo/image de l'article (optionnel) |
+| author | Nom de l'auteur de l'article |
+| isPublished | Indique si l'article est publié ou en brouillon |
+| createdAt | Date et heure de création de l'article |
+| updatedAt | Date et heure de la dernière modification |
+
+---
+
 ## Énumérations
 
 ### Enum: Role
 - **ADMIN** - Administrateur avec accès complet
 - **USER** - Utilisateur standard avec accès limité
+- **STAFF** - Employé du café avec accès complet
 
 ### Enum: Sex
 - **MALE** - Sexe masculin

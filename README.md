@@ -27,6 +27,7 @@ kawaf/
 │   └── app/
 │       ├── api/                 # API endpoints
 │       │   ├── animals/         # Animal CRUD endpoints
+│       │   ├── blog/            # Blog post CRUD endpoints
 │       │   ├── events/          # Event management endpoints
 │       │   ├── menu/            # Menu item CRUD endpoints
 │       │   └── user/            # User authentication endpoints
@@ -50,12 +51,13 @@ kawaf/
 
 ### Database Schema
 
-The application uses 4 main models:
+The application uses 5 main models:
 
 1. **User** - Admin user accounts with role-based access (ADMIN/USER)
 2. **MenuItem** - Restaurant menu items with pricing and availability
 3. **Animal** - Animals available for adoption with details and adoption status
 4. **Event** - Community events with date, location, and description
+5. **BlogPost** - Blog articles with publication status and author information
 
 For detailed schema documentation, see [SCHEMA_DOCUMENTATION.md](./SCHEMA_DOCUMENTATION.md)
 
@@ -196,6 +198,15 @@ All endpoints use JWT-based authorization via the `Authorization: Bearer <token>
 | `POST` | `/api/events` | Authenticated | Requires USER, STAFF, or ADMIN role |
 | `PUT` | `/api/events/:id` | Authenticated | Requires USER, STAFF, or ADMIN role |
 | `DELETE` | `/api/events/:id` | Authenticated | Requires USER, STAFF, or ADMIN role |
+
+### Blog
+| Method | Endpoint | Access | Notes |
+|--------|----------|--------|-------|
+| `GET` | `/api/blog` | Public | ADMIN/STAFF see all; others see only `isPublished: true` |
+| `GET` | `/api/blog/:id` | Public | Everyone can view a single blog post |
+| `POST` | `/api/blog` | Authenticated | Requires USER, STAFF, or ADMIN role |
+| `PUT` | `/api/blog/:id` | Authenticated | Requires USER, STAFF, or ADMIN role |
+| `DELETE` | `/api/blog/:id` | Authenticated | Requires USER, STAFF, or ADMIN role |
 
 ### Users
 | Method | Endpoint | Access | Notes |

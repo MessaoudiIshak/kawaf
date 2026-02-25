@@ -43,6 +43,12 @@ The entire backend system is complete and ready to power the website. Here's wha
 - Create new staff accounts (Admin only)
 - View all registered users (Admin only)
 
+### 📝 Blog / Articles
+- Display all published blog articles
+- Show details: title, content, author, creation date, optional photo
+- Unpublished articles are hidden from visitors but visible to Staff/Admin
+- Add, edit, or remove blog articles
+
 ---
 
 ## � Features In Development
