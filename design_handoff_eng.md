@@ -1,8 +1,8 @@
 # 🎨 Kawaf - Design Handoff Document
 
-> **Last Updated:** January 15, 2026  
+> **Last Updated:** February 25, 2026  
 > **Project:** Kawaf Cat Café Website  
-> **Status:** Backend Complete, Frontend Development Pending
+> **Status:** Backend Complete, Frontend Routes Created, UI Implementation In Progress
 
 ---
 
@@ -51,7 +51,28 @@ The entire backend system is complete and ready to power the website. Here's wha
 
 ---
 
-## � Features In Development
+## 🚀 What's Currently Being Built (Frontend)
+
+The frontend app structure has been created with Next.js 16 App Router. The following page skeletons are in place:
+
+### Public Pages (Everyone)
+- **Home Page** (`/`) - Vitrine displaying hero, menu highlights, adoption gallery, upcoming events, and blog posts
+- **Login Page** (`/login`) - Staff authentication page
+
+### Admin Dashboard Pages (Authenticated Users)
+- **Dashboard Overview** (`/dashboard`) - Stats and overview
+- **Menu Management** (`/dashboard/menu`) - CRUD table for managing café menu items
+- **Animals Management** (`/dashboard/animals`) - CRUD table for managing cats available for adoption
+- **Events Management** (`/dashboard/events`) - CRUD table for managing community events
+- **Blog Management** (`/dashboard/blog`) - CRUD table for managing published/draft blog posts
+
+### Technical Details
+- Route groups: `(public)`, `(auth)`, `(dashboard)`
+- Dashboard uses shared layout with sidebar navigation
+- Auth guard middleware on dashboard routes
+- API integration ready with fetch calls to backend endpoints
+
+---
 
 These features are planned and will be built soon:
 

@@ -1,8 +1,8 @@
 # 🎨 Kawaf - Document de Transmission Design
 
-> **Dernière mise à jour :** 15 janvier 2026  
+> **Dernière mise à jour :** 25 février 2026  
 > **Projet :** Site web Kawaf Cat Café  
-> **Statut :** Backend terminé, Développement Frontend en attente
+> **Statut :** Backend terminé, Routes Frontend créées, Implémentation UI en cours
 
 ---
 
@@ -51,7 +51,28 @@ L'ensemble du système backend est terminé et prêt à alimenter le site. Voici
 
 ---
 
-## 🚧 Fonctionnalités en Développement
+## � Ce qui est actuellement en construction (Frontend)
+
+La structure de l'application frontend a été créée avec Next.js 16 App Router. Les squelettes de pages suivants sont en place :
+
+### Pages Publiques (Tout le monde)
+- **Page d'accueil** (`/`) - Vitrine avec héro, plats du menu, galerie d'adoption, événements à venir, articles de blog
+- **Page de connexion** (`/login`) - Page d'authentification du personnel
+
+### Pages du Tableau de Bord Admin (Utilisateurs authentifiés)
+- **Aperçu du tableau de bord** (`/dashboard`) - Statistiques et aperçu général
+- **Gestion du menu** (`/dashboard/menu`) - Tableau CRUD pour gérer les articles du menu du café
+- **Gestion des animaux** (`/dashboard/animals`) - Tableau CRUD pour gérer les chats disponibles à l'adoption
+- **Gestion des événements** (`/dashboard/events`) - Tableau CRUD pour gérer les événements communautaires
+- **Gestion du blog** (`/dashboard/blog`) - Tableau CRUD pour gérer les articles de blog publiés/brouillons
+
+### Détails techniques
+- Groupes de routes : `(public)`, `(auth)`, `(dashboard)`
+- Le tableau de bord utilise une mise en page partagée avec navigation de barre latérale
+- Middleware de garde d'authentification sur les routes du tableau de bord
+- Intégration API prête avec appels de récupération aux points de terminaison du backend
+
+---
 
 Ces fonctionnalités sont prévues et seront construites prochainement :
 

@@ -31,9 +31,23 @@ kawaf/
 │       │   ├── events/          # Event management endpoints
 │       │   ├── menu/            # Menu item CRUD endpoints
 │       │   └── user/            # User authentication endpoints
+│       ├── (public)/            # Public routes
+│       │   ├── layout.tsx       # Public layout (Navbar + Footer)
+│       │   └── page.tsx         # Vitrine: Hero, Menu, Cats, Events, Blog
+│       ├── (auth)/              # Authentication routes
+│       │   ├── layout.tsx       # Auth layout (center-box)
+│       │   └── login/
+│       │       └── page.tsx     # Login form
+│       ├── (dashboard)/         # Dashboard routes (Auth Guard)
+│       │   ├── layout.tsx       # Dashboard layout (Sidebar navigation)
+│       │   └── dashboard/
+│       │       ├── page.tsx     # Overview/Stats
+│       │       ├── animals/page.tsx    # Manage Cats (Table)
+│       │       ├── menu/page.tsx       # Manage Menu (Table)
+│       │       ├── events/page.tsx     # Manage Events (Table)
+│       │       └── blog/page.tsx       # Manage Blog Posts (Table)
 │       ├── globals.css          # Global styles
-│       ├── layout.tsx           # Root layout component
-│       └── page.tsx             # Home page
+│       └── layout.tsx           # Root layout
 │   ├── lib/
 │   │   ├── auth-guard.ts        # JWT authentication helper
 │   │   └── prisma.ts            # Prisma client singleton
@@ -199,14 +213,17 @@ All endpoints use JWT-based authorization via the `Authorization: Bearer <token>
 | `PUT` | `/api/events/:id` | Authenticated | Requires USER, STAFF, or ADMIN role |
 | `DELETE` | `/api/events/:id` | Authenticated | Requires USER, STAFF, or ADMIN role |
 
-### Blog
-| Method | Endpoint | Access | Notes |
-|--------|----------|--------|-------|
-| `GET` | `/api/blog` | Public | ADMIN/STAFF see all; others see only `isPublished: true` |
-| `GET` | `/api/blog/:id` | Public | Everyone can view a single blog post |
-| `POST` | `/api/blog` | Authenticated | Requires USER, STAFF, or ADMIN role |
-| `PUT` | `/api/blog/:id` | Authenticated | Requires USER, STAFF, or ADMIN role |
-| `DELETE` | `/api/blog/:id` | Authenticated | Requires USER, STAFF, or ADMIN role |
+### Frontend Routes
+
+| Route | Purpose | Auth Required |
+|-------|---------|---------------|
+| `/` | Public vitrine with menu, cats, events, blog sections | No |
+| `/login` | User login page | No |
+| `/dashboard` | Admin overview & stats | Yes |
+| `/dashboard/menu` | Manage menu items (Create, Read, Update, Delete) | Yes |
+| `/dashboard/animals` | Manage cats/animals (Create, Read, Update, Delete) | Yes |
+| `/dashboard/events` | Manage events (Create, Read, Update, Delete) | Yes |
+| `/dashboard/blog` | Manage blog posts (Create, Read, Update, Delete) | Yes |
 
 ### Users
 | Method | Endpoint | Access | Notes |
