@@ -71,3 +71,15 @@ model Event {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+// 5. BlogPost Model
+model BlogPost {
+  id          Int      @id @default(autoincrement())
+  title       String
+  content     String
+  photoUrl    String?
+  author      String
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

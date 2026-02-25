@@ -82,6 +82,54 @@ async function main() {
   }
   console.log('📅 Events seeded');
 
+  // --- 5. BLOG POSTS (Public vs Private Testing) ---
+  const blogPosts = [
+    {
+      title: 'Welcome to Our Kawaf Blog',
+      content: 'This is our first official blog post. We\'re excited to share updates about our café, events, and the amazing animals available for adoption!',
+      author: 'Main Boss',
+      isPublished: true,
+      photoUrl: 'https://images.unsplash.com/photo-1520066116519-bcea3c35b89e?w=800',
+    },
+    {
+      title: 'Meet Our Adoption Success Stories',
+      content: 'Learn about some of the wonderful animals that have found their forever homes. Each adoption makes our café community stronger!',
+      author: 'Barista Sam',
+      isPublished: true,
+      photoUrl: 'https://images.unsplash.com/photo-1574158622682-e40e69881006?w=800',
+    },
+    {
+      title: 'Behind the Scenes: Our Coffee Sourcing',
+      content: 'Discover how we select our premium coffee beans from sustainable farms around the world. Quality and ethics matter to us!',
+      author: 'Regular Joe',
+      isPublished: true,
+      photoUrl: 'https://images.unsplash.com/photo-1559056169-641ef0ac8b21?w=800',
+    },
+    {
+      title: 'Coming Soon: New Seasonal Menu',
+      content: 'We\'re working on some exciting new drinks for spring! Hints of lavender, oat milk magic, and local fruit collaborations await.',
+      author: 'Barista Sam',
+      isPublished: false,
+      photoUrl: null,
+    },
+    {
+      title: 'Internal Staff Update - Renovation Plans',
+      content: 'Staff only: Our café will undergo renovations in Q2 2026. Details coming in next week\'s team meeting.',
+      author: 'Main Boss',
+      isPublished: false,
+      photoUrl: null,
+    },
+  ];
+
+  for (const post of blogPosts) {
+    await prisma.blogPost.upsert({
+      where: { id: blogPosts.indexOf(post) + 1 },
+      update: {},
+      create: post,
+    });
+  }
+  console.log('📝 Blog posts seeded');
+
   console.log('✨ Full seeding finished successfully!');
 }
 
